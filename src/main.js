@@ -686,7 +686,11 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                     this.els.htmlExportOptions.style.display = 'block'; 
                     this.els.btnApplyExport.textContent = 'プレビュー';
                 }
-                this.openModal(this.els.exportModal, this.els.inputExportFileName);
+                this.openModal(this.els.exportModal);
+                setTimeout(() => {
+                    this.els.inputExportFileName.focus();
+                    this.els.inputExportFileName.select();
+                }, 100);
             }
 
             calculateMagDeclination(shouldDraw = true) {
