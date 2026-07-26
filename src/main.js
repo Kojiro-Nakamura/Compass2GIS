@@ -2227,10 +2227,11 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                 const labelsHTML = this._generateDraggableLabelsHTML(expScale, expOffsetX, expOffsetY, expRes.pxPerMm, expRes.x, expRes.y);
                 
                 // 地図ビュー用の緯度経度境界を計算
-                const ixLeft = (expRes.x - expOffsetX) / expScale;
-                const iyTop = (expOffsetY - expRes.y) / expScale;
-                const ixRight = (expRes.x + expRes.w - expOffsetX) / expScale;
-                const iyBottom = (expOffsetY - (expRes.y + expRes.h)) / expScale;
+                // 地図ビュー用の緯度経度境界を計算 (printMapBg が用紙全体と同じサイズになるため)
+                const ixLeft = -expOffsetX / expScale;
+                const iyTop = expOffsetY / expScale;
+                const ixRight = (conf.expW - expOffsetX) / expScale;
+                const iyBottom = (expOffsetY - conf.expH) / expScale;
 
                 const lonDegPerMeter = CONSTANTS.LAT_DEG_PER_METER / Math.cos(Utils.deg2rad(lat));
                 const latTop = lat + iyTop * CONSTANTS.LAT_DEG_PER_METER;
@@ -2259,7 +2260,19 @@ table { border-collapse: collapse; border: 1px solid #000; } th, td { border: 1p
 .btn-save { background: #059669; }
 .btn-zoom { background: #52525b; color: white; border: 1px solid #71717a; border-radius: 4px; width: 24px; height: 24px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; padding: 0; line-height: 1; transition: all 0.2s; }
 .btn-zoom:hover { background: #6366f1; border-color: #818cf8; }
-@media print { body { background: none; padding: 0; } .page-wrapper { display: block; } .page-container { box-shadow: none; page-break-after: always; transform: none !important; margin: 0; } .instruction, .draggable:hover, .sub-draggable:hover, .map-group:hover { display: none !important; outline: none; box-shadow: none; } }
+.map-cropper { outline: 1px dashed transparent; pointer-events: auto; }
+.map-group:hover .map-cropper, .map-cropper.active { outline-color: #f59e0b; }
+.resize-handle { position: absolute; width: 12px; height: 12px; background: #fff; border: 1px solid #333; display: none; z-index: 10; pointer-events: auto; }
+.map-group:hover .resize-handle, .map-cropper.active .resize-handle { display: block; }
+.resize-handle.n { top: -6px; left: calc(50% - 6px); cursor: ns-resize; }
+.resize-handle.s { bottom: -6px; left: calc(50% - 6px); cursor: ns-resize; }
+.resize-handle.e { top: calc(50% - 6px); right: -6px; cursor: ew-resize; }
+.resize-handle.w { top: calc(50% - 6px); left: -6px; cursor: ew-resize; }
+.resize-handle.ne { top: -6px; right: -6px; cursor: nesw-resize; }
+.resize-handle.nw { top: -6px; left: -6px; cursor: nwse-resize; }
+.resize-handle.se { bottom: -6px; right: -6px; cursor: nwse-resize; }
+.resize-handle.sw { bottom: -6px; left: -6px; cursor: nesw-resize; }
+@media print { body { background: none; padding: 0; } .page-wrapper { display: block; } .page-container { box-shadow: none; page-break-after: always; transform: none !important; margin: 0; } .instruction, .draggable:hover, .sub-draggable:hover, .map-group:hover, .resize-handle { display: none !important; outline: none; box-shadow: none; } .map-cropper { outline: none !important; } }
 </style></head><body>
 <div class="instruction" id="toolbar">
     <div style="display: flex; align-items: center; gap: 15px;">
@@ -2286,7 +2299,11 @@ table { border-collapse: collapse; border: 1px solid #000; } th, td { border: 1p
 <div class="page-wrapper">
     <div class="page-container">
         <div class="map-group draggable no-bg no-scale" style="position: absolute; left: ${expRes.x / expRes.pxPerMm}mm; top: ${expRes.y / expRes.pxPerMm}mm; width: ${expRes.w / expRes.pxPerMm}mm; height: ${expRes.h / expRes.pxPerMm}mm; z-index: 1;">
-            <div id="printMapBg" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.7; pointer-events: none;"></div>
+            <div id="map-cropper" class="map-cropper" style="position:absolute; z-index:0; top: ${-(expRes.y / expRes.pxPerMm) + 10}mm; left: ${-(expRes.x / expRes.pxPerMm) + 10}mm; width: ${conf.w - 20}mm; height: ${conf.h - 20}mm; overflow:hidden;">
+                <div id="printMapBg" style="position:absolute; top: -10mm; left: -10mm; width: ${conf.w}mm; height: ${conf.h}mm; z-index: 0; opacity: 0.7; pointer-events: none;"></div>
+                <div class="resize-handle n" data-dir="n"></div><div class="resize-handle s" data-dir="s"></div><div class="resize-handle w" data-dir="w"></div><div class="resize-handle e" data-dir="e"></div>
+                <div class="resize-handle nw" data-dir="nw"></div><div class="resize-handle ne" data-dir="ne"></div><div class="resize-handle sw" data-dir="sw"></div><div class="resize-handle se" data-dir="se"></div>
+            </div>
             <img src="${expRes.dataURL}" draggable="false" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 1;">
             ${labelsHTML}
         </div>
@@ -2506,6 +2523,46 @@ window.addEventListener('load', () => {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+    });
+
+    let isResizing = false;
+    let startX, startY, initL, initT, initW, initH, initInnerT, initInnerL, dir;
+    const cropper = document.getElementById('map-cropper');
+    const mapBgDiv = document.getElementById('printMapBg');
+    
+    cropper.addEventListener('mousedown', (e) => {
+        if (e.target.classList.contains('resize-handle')) {
+            isResizing = true;
+            dir = e.target.getAttribute('data-dir');
+            e.stopPropagation(); e.preventDefault();
+            startX = e.clientX; startY = e.clientY;
+            const cs = window.getComputedStyle(cropper);
+            initL = parseFloat(cs.left); initT = parseFloat(cs.top);
+            initW = parseFloat(cs.width); initH = parseFloat(cs.height);
+            const is = window.getComputedStyle(mapBgDiv);
+            initInnerL = parseFloat(is.left); initInnerT = parseFloat(is.top);
+            cropper.classList.add('active');
+        }
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+        if (!isResizing) return;
+        const s = window.pageScale || 1;
+        const dx = (e.clientX - startX) / s;
+        const dy = (e.clientY - startY) / s;
+        
+        if (dir.includes('n')) { cropper.style.top = (initT + dy) + 'px'; cropper.style.height = (initH - dy) + 'px'; mapBgDiv.style.top = (initInnerT - dy) + 'px'; }
+        if (dir.includes('s')) { cropper.style.height = (initH + dy) + 'px'; }
+        if (dir.includes('w')) { cropper.style.left = (initL + dx) + 'px'; cropper.style.width = (initW - dx) + 'px'; mapBgDiv.style.left = (initInnerL - dx) + 'px'; }
+        if (dir.includes('e')) { cropper.style.width = (initW + dx) + 'px'; }
+    });
+    
+    document.addEventListener('mouseup', () => {
+        if (isResizing) {
+            isResizing = false;
+            cropper.classList.remove('active');
+            if (mapBg) mapBg.invalidateSize();
+        }
     });
 
     let mapBg = null;
