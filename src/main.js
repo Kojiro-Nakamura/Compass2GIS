@@ -2252,7 +2252,7 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
 body { font-family: sans-serif; font-size: 10pt; background: #ececec; margin:0; padding-top: 60px; }
 .page-wrapper { width: 100%; display: flex; justify-content: center; }
 .page-container { position: relative; width: ${conf.w}mm; height: ${conf.h}mm; background: #fff; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.2); transform-origin: top center; transition: transform 0.1s ease; margin-bottom: 20px; }
-.draggable { position: absolute; z-index: 2; background: rgba(255,255,255,0.85); cursor: move; transform-origin: top left; white-space: nowrap; box-sizing: border-box; }
+.draggable { position: absolute; z-index: 2; background: #fff; cursor: move; transform-origin: top left; white-space: nowrap; box-sizing: border-box; }
 .draggable.no-bg { background: transparent; }
 .draggable:not(.map-group):hover, .sub-draggable:hover { box-shadow: 0 0 12px rgba(46,92,138,0.4); outline: 2px dashed rgba(46,92,138,0.6); z-index: 10; }
 .compass-image { position: absolute; bottom: 30mm; left: 25mm; width: 30mm; height: 30mm; z-index: 3; }
@@ -2310,7 +2310,7 @@ table { border-collapse: collapse; border: 1px solid #000; } th, td { border: 1p
             <img src="${expRes.dataURL}" draggable="false" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 1;">
             ${labelsHTML}
         </div>
-        <img src="${compSVG}" class="compass-image draggable no-scale" draggable="false">
+        <img src="${compSVG}" class="compass-image draggable no-scale no-bg" draggable="false">
         <div class="attr-table-wrapper draggable"><table>${attrTable}</table></div>${resTable}${areaTable}
         ${this.els.closureInfo.innerText ? `<div class="closure-info draggable" style="bottom:15mm; left:15mm; padding:5px; font-size:9pt;">閉合状況: ${this.els.closureInfo.innerText}</div>` : ''}
     </div>
