@@ -2328,8 +2328,6 @@ table { border-collapse: collapse; border: 1px solid #000; } th, td { border: 1p
     <div>
         <button class="btn" onclick="window.print()">🖨️ 印刷</button>
         <button class="btn" id="btnSaveDXF" style="background: #c2410c;">💾 DXF保存</button>
-        <button class="btn" id="btnSaveDXF" style="background: #c2410c;">💾 DXF保存</button>
-        <button class="btn" id="btnSaveDXF" style="background: #c2410c;">💾 DXF保存</button>
         <button class="btn btn-save" id="btnSaveHTML">💾 HTML保存</button>
     </div>
 </div>
