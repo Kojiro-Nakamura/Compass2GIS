@@ -2212,6 +2212,15 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                 
                 const showMapBg = this.els.chkExportMapBg ? this.els.chkExportMapBg.checked : false;
                 
+                let currentTileUrl = 'https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png';
+                if (this.map) {
+                    this.map.eachLayer(layer => {
+                        if (layer instanceof L.TileLayer) {
+                            currentTileUrl = layer._url;
+                        }
+                    });
+                }
+                
                 // SVG（背景となる線や面、ドットのみ出力する）と、ドラッグ可能なテキスト群（HTML）を生成
                 const expRes = this._generateExportSVGDataURL(conf, expScale, expOffsetX, expOffsetY);
                 const compSVG = this._generateCompassSVGDataURL(conf, dec);
@@ -2263,9 +2272,9 @@ table { border-collapse: collapse; border: 1px solid #000; } th, td { border: 1p
             <button class="btn-zoom" id="btnFitScreen" title="画面に合わせる" style="width: auto; padding: 0 8px; font-size: 0.8rem; margin-left: 4px;">⛶ フィット</button>
             <label style="font-size:13px; margin-left: 10px; cursor: pointer; color: white;"><input type="checkbox" id="chkBgMap" ${showMapBg ? 'checked' : ''}> 背景地図</label>
             <select id="bgMapType" style="margin-left:5px; font-size:13px; padding: 2px;">
-                <option value="https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png">標準地図</option>
-                <option value="https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg">写真</option>
-                <option value="https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png" selected>淡色地図</option>
+                <option value="https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png" ${currentTileUrl.includes('std') ? 'selected' : ''}>標準地図</option>
+                <option value="https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg" ${currentTileUrl.includes('seamlessphoto') ? 'selected' : ''}>写真</option>
+                <option value="https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png" ${currentTileUrl.includes('pale') ? 'selected' : ''}>淡色地図</option>
             </select>
         </div>
     </div>
