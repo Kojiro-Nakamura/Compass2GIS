@@ -75,7 +75,6 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                     btnPasteAttr: $id('btnPasteAttr'), btnCancelAttrPaste: $id('btnCancelAttrPaste'), btnApplyAttrPaste: $id('btnApplyAttrPaste'),
                     exportModal: $id('exportModal'), exportModalTitle: $id('exportModalTitle'), inputExportFileName: $id('inputExportFileName'),
                     exportExtension: $id('exportExtension'), btnCancelExport: $id('btnCancelExport'), btnApplyExport: $id('btnApplyExport'),
-                    chkExportMapBg: $id('chkExportMapBg'),
                     htmlExportOptions: $id('htmlExportOptions'), inputCustomScale: $id('inputCustomScale'), radioCustomScale: $id('radioCustomScale'),
                     importPreviewModal: $id('importPreviewModal'), importFileList: $id('importFileList'), importPreviewImage: $id('importPreviewImage'),
                     importNoPreviewText: $id('importNoPreviewText'), importPreviewInfo: $id('importPreviewInfo'), btnCancelImport: $id('btnCancelImport'),
@@ -2214,7 +2213,7 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                 const resTable = this._buildExportHTMLResultsTable(split), { expScale, expOffsetX, expOffsetY, displayScaleText } = this._calcExportScaleOptions(conf, sOpt);
                 const attrTable = this._buildExportHTMLAttrTable(displayScaleText, lat, lon, dec), areaTable = this._buildExportHTMLAreaTable();
                 
-                const showMapBg = this.els.chkExportMapBg ? this.els.chkExportMapBg.checked : false;
+                const showMapBg = this.isMapMode;
                 
                 let currentTileUrl = 'https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png';
                 if (this.map) {
