@@ -2218,10 +2218,10 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                 const labelsHTML = this._generateDraggableLabelsHTML(expScale, expOffsetX, expOffsetY, expRes.pxPerMm, expRes.x, expRes.y);
                 
                 // 地図ビュー用の緯度経度境界を計算
-                const ixLeft = -expOffsetX / expScale;
-                const iyTop = expOffsetY / expScale;
-                const ixRight = (conf.expW - expOffsetX) / expScale;
-                const iyBottom = (expOffsetY - conf.expH) / expScale;
+                const ixLeft = (expRes.x - expOffsetX) / expScale;
+                const iyTop = (expOffsetY - expRes.y) / expScale;
+                const ixRight = (expRes.x + expRes.w - expOffsetX) / expScale;
+                const iyBottom = (expOffsetY - (expRes.y + expRes.h)) / expScale;
 
                 const lonDegPerMeter = CONSTANTS.LAT_DEG_PER_METER / Math.cos(Utils.deg2rad(lat));
                 const latTop = lat + iyTop * CONSTANTS.LAT_DEG_PER_METER;
