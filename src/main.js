@@ -2205,7 +2205,7 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                 this._downloadFile("data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ type: "FeatureCollection", features }, null, 2)), fileName);
             }
 
-            showHTMLPreview(fileName, pSize = 'A4', ori = 'landscape', sOpt = 'auto', split = 50) {
+            showHTMLPreview(fileName, pSize = 'A4', ori = 'landscape', sOpt = 'auto', split = 50, existingWin = null) {
                 const origMag = this.els.chkMagDeclination.checked; this.els.chkMagDeclination.checked = false;
                 this.calculateCoordinates(); this.findClosedAreas();
 
@@ -2292,6 +2292,33 @@ table { border-collapse: collapse; border: 1px solid #000; } th, td { border: 1p
                 <option value="https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg" ${currentTileUrl.includes('seamlessphoto') ? 'selected' : ''}>写真</option>
                 <option value="https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png" ${currentTileUrl.includes('pale') ? 'selected' : ''}>淡色地図</option>
             </select>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 6px;">
+            <span style="font-size: 0.85rem;">用紙:</span>
+            <select id="plPaperSize" style="font-size:12px; padding:2px;">
+                <option value="A4" ${pSize==='A4'?'selected':''}>A4</option>
+                <option value="A3" ${pSize==='A3'?'selected':''}>A3</option>
+            </select>
+            <select id="plOrientation" style="font-size:12px; padding:2px;">
+                <option value="landscape" ${ori==='landscape'?'selected':''}>横</option>
+                <option value="portrait" ${ori==='portrait'?'selected':''}>縦</option>
+            </select>
+            <span style="font-size: 0.85rem; margin-left: 6px;">縮尺:</span>
+            <select id="plScale" style="font-size:12px; padding:2px;">
+                <option value="auto" ${sOpt==='auto'?'selected':''}>自動縮尺</option>
+                <option value="100" ${sOpt==='100'?'selected':''}>1/100</option>
+                <option value="200" ${sOpt==='200'?'selected':''}>1/200</option>
+                <option value="250" ${sOpt==='250'?'selected':''}>1/250</option>
+                <option value="300" ${sOpt==='300'?'selected':''}>1/300</option>
+                <option value="500" ${sOpt==='500'?'selected':''}>1/500</option>
+                <option value="1000" ${sOpt==='1000'?'selected':''}>1/1,000</option>
+                <option value="2000" ${sOpt==='2000'?'selected':''}>1/2,000</option>
+                <option value="2500" ${sOpt==='2500'?'selected':''}>1/2,500</option>
+                <option value="5000" ${sOpt==='5000'?'selected':''}>1/5,000</option>
+            </select>
+            <span style="font-size: 0.85rem; margin-left: 6px;">成果表折返:</span>
+            <input type="number" id="plTableSplit" value="${split}" style="width:45px; font-size:12px; padding:2px;">
         </div>
     </div>
     <div>
@@ -2610,12 +2637,35 @@ window.addEventListener('load', () => {
         document.getElementById('map-cropper').style.display = 'none';
     }
 
+    // --- Preview Settings Update ---
+    function applyPreviewSettings() {
+        if (window.opener && window.opener.app && typeof window.opener.app.showHTMLPreview === 'function') {
+            const newPSize = document.getElementById('plPaperSize').value;
+            const newOri = document.getElementById('plOrientation').value;
+            const newSOpt = document.getElementById('plScale').value;
+            const newSplit = parseInt(document.getElementById('plTableSplit').value, 10) || 50;
+            window.opener.app.showHTMLPreview(${JSON.stringify(fileName)}, newPSize, newOri, newSOpt, newSplit, window);
+        } else {
+            alert('元の画面が閉じられているか、アクセスできないため設定を反映できません。');
+        }
+    }
+    
+    document.getElementById('plPaperSize').addEventListener('change', applyPreviewSettings);
+    document.getElementById('plOrientation').addEventListener('change', applyPreviewSettings);
+    document.getElementById('plScale').addEventListener('change', applyPreviewSettings);
+    document.getElementById('plTableSplit').addEventListener('change', applyPreviewSettings);
+
+
 });
 <\/script></body></html>`;
 
                 const blob = new Blob([htmlContent], { type: 'text/html' });
                 const url = URL.createObjectURL(blob);
-                window.open(url, '_blank');
+                if (existingWin) {
+                    existingWin.location.replace(url);
+                } else {
+                    window.open(url, '_blank');
+                }
 
                 this.els.chkMagDeclination.checked = origMag; this.updateDrawing(false);
             }
