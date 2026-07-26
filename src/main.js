@@ -2923,4 +2923,4 @@ window.addEventListener('load', () => {
                 this.pushState(); this.showToast('データを読み込みました。');
             }
         }
-        window.onload = () => new CompassSurveyApp();
+        window.onload = () => { window.app = new CompassSurveyApp(); };
