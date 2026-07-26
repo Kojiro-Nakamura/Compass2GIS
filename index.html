@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌍 コンパスtoGIS（ブラウザ版）</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="header">
+        <h1>🌍 コンパスtoGIS（ブラウザ版）</h1>
+    </div>
+    
+    <div class="container">
+        <div class="sidebar">
+            <div class="controls">
+                <button id="btnSaveJSON" style="background-color: #2E5C8A;" title="編集データをJSONで保存">💾 保存</button>
+                <label class="btn-file-load" title="この画面上にファイルやフォルダをドロップすると開くことができます">
+                    📂 読込（複数選択可）<input type="file" id="inputFileJSON" accept=".json" multiple style="display: none;">
+                </label>
+                <button id="btnSurvey" style="background-color: #059669; margin-left: 4px;" title="アンケートにご協力ください" onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLSeBDmW2RV_AWb1Lp5Xddd1UZr0pPDF-ws2TszuY-CpB7Nh99w/viewform?usp=publish-editor', '_blank')">📝 アンケート</button>
+                
+                <div style="display: flex; gap: 4px; margin-left: auto;">
+                    <button id="btnUndo" style="background-color: #9ca3af; padding: 0; width: 28px; height: 28px; font-size: 1.1rem; border-radius: 4px;" title="元に戻す (Ctrl+Z)" disabled>↩️</button>
+                    <button id="btnRedo" style="background-color: #9ca3af; padding: 0; width: 28px; height: 28px; font-size: 1.1rem; border-radius: 4px;" title="やり直す (Ctrl+Y)" disabled>↪️</button>
+                </div>
+                
+                <div style="flex-basis: 100%; height: 0;"></div>
+                
+                <button id="btnExportGeoJSON" style="background-color: #664F82;">🌐 GeoJSON出力</button>
+                <button id="btnExportHTML" style="background-color: #217270; margin-left: 8px;">📄 平面図出力</button>
+
+                <div style="display: flex; align-items: center; gap: 5px; font-size: 0.85rem; color: #4b5563; margin-left: auto;">
+                    <strong>🏷️ 測点名表示:</strong>
+                    <select id="selNodeLabelInterval" style="padding: 2px 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 0.8rem; background: #fff;">
+                        <option value="1">すべて</option>
+                        <option value="2">2測点ごと</option>
+                        <option value="5" selected>5測点ごと</option>
+                        <option value="10">10測点ごと</option>
+                        <option value="0">非表示</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="settings-bar" style="padding: 6px 10px; border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 6px; background: var(--sidebar-bg);">
+                <div style="font-size: 0.75rem; display: flex; flex-direction: column; gap: 4px; background: #fff; padding: 6px 8px; border: 1px solid #e5e7eb; border-radius: 4px;">
+                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                        <strong>🌍 BP座標：</strong>
+                        <span>緯度：<input type="number" id="inputLat" value="34.097294" step="0.0001" style="width: 70px; padding: 1px 2px; font-size: 0.75rem; border:1px solid #ccc; border-radius:2px;"></span>
+                        <span>経度：<input type="number" id="inputLon" value="135.434808" step="0.0001" style="width: 75px; padding: 1px 2px; font-size: 0.75rem; border:1px solid #ccc; border-radius:2px;"></span>
+                        <button id="btnOpenDMSModal" class="small" style="background:#664F82; padding: 2px 4px; height: 20px; font-size: 0.7rem;" title="様々な形式の緯度経度（10進数や度分秒など）を解析して入力">貼付け</button>
+                        <button id="btnCopyLatLon" class="small" style="background:#2E5C8A; padding: 2px 4px; height: 20px; font-size: 0.7rem;" title="現在の緯度経度をクリップボードにコピー">コピー</button>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                        <strong>🧭 偏角（西偏）：</strong>
+                        <span><input type="number" id="inputDeclination" value="0.00" step="0.1" style="width: 50px; padding: 1px 2px; font-size: 0.75rem; border:1px solid #ccc; border-radius:2px;">度</span>
+                        <button id="btnCalcMag" class="small" style="background:#217270; padding: 2px 6px; height: 20px; font-size: 0.7rem;" title="国土地理院の近似式(2020年)から計算">計算</button>
+                        <button id="btnCopyDeclination" class="small" style="background:#2E5C8A; padding: 2px 4px; height: 20px; font-size: 0.7rem;" title="現在の偏角をクリップボードにコピー">コピー</button>
+                        <label style="display: flex; align-items: center; gap: 4px; font-size: 0.7rem; cursor: pointer; margin-left: 2px;">
+                            <input type="checkbox" id="chkMagDeclination" checked style="margin: 0;"> 磁気偏角補正を行う
+                        </label>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 0;">
+                    <label style="display: flex; align-items: center; gap: 4px; font-size: 0.75rem; cursor: pointer; font-weight: 600;">
+                        <input type="checkbox" id="chkCompassAdjustment" checked style="margin: 0;"> 閉合を行う
+                    </label>
+                    <button id="btnCopyClosureInfo" class="small" style="background-color: #2E5C8A; color: white; height: 20px; font-size: 0.7rem; padding: 2px 4px;" title="閉合状況をクリップボードにコピー">📋 コピー</button>
+                    <span id="closureInfo" style="font-size: 0.75rem; display: none;"></span>
+                </div>
+            </div>
+
+            <div id="areaResults"></div>
+
+            <div class="attr-table-container" style="padding: 6px 10px; border-bottom: 1px solid var(--border-color); background: var(--sidebar-bg);">
+                <div style="font-size: 0.85rem; font-weight: bold; margin-bottom: 2px; color: #4b5563; display: flex; justify-content: flex-start; align-items: center; gap: 10px;">
+                    <span>🏷️ 属性</span>
+                    <div style="display: flex; gap: 4px;">
+                        <button id="btnPasteAttr" class="small" style="background-color: #B36A22; color: white; height: 20px; font-size: 0.7rem; padding: 2px 4px;" title="Excelなどから属性データを貼り付け">📋 貼付け</button>
+                        <button id="btnCopyAttr" class="small" style="background-color: #2E5C8A; color: white; height: 20px; font-size: 0.7rem; padding: 2px 4px;" title="現在の属性データをクリップボードにコピー">📋 コピー</button>
+                    </div>
+                </div>
+                <div style="max-height: 180px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 2px;">
+                    <table style="border-style: hidden; margin: 0;">
+                        <thead><tr><th style="width: 40%;">項目名</th><th>値</th><th class="action-col">操作</th></tr></thead>
+                        <tbody id="attrTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div style="padding: 6px 10px 4px 10px; background: var(--sidebar-bg);">
+                <div style="font-size: 0.85rem; font-weight: bold; margin-bottom: 2px; color: #4b5563; display: flex; justify-content: flex-start; align-items: center; gap: 10px;">
+                    <span>🏷️ 測量データ</span>
+                    <div style="display: flex; gap: 4px;">
+                        <button id="btnPasteClipboard" class="small" style="background-color: #B36A22; color: white; height: 20px; font-size: 0.7rem; padding: 2px 4px;" title="クリップボードから貼り付け">📋 貼付け</button>
+                        <button id="btnCopyClipboard" class="small" style="background-color: #2E5C8A; color: white; height: 20px; font-size: 0.7rem; padding: 2px 4px;" title="現在のデータをクリップボードにコピー">📋 コピー</button>
+                        <button id="btnClear" class="small danger" style="height: 20px; font-size: 0.7rem; padding: 2px 4px;" title="すべてのデータをクリア">🗑️ クリア</button>
+                        <button id="btnLoadDemo" class="small" style="background-color: #596068; color: white; height: 20px; font-size: 0.7rem; padding: 2px 4px;" title="デモデータを読み込む">✨ デモデータ</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">器械点</th><th style="width: 15%;">視準点</th>
+                            <th style="width: 15%;">方位角<br><span style="font-size:0.7em;font-weight:normal;">(度.分)</span></th>
+                            <th style="width: 15%;">高低角<br><span style="font-size:0.7em;font-weight:normal;">(度.分)</span></th>
+                            <th style="width: 15%;">斜距離<br><span style="font-size:0.7em;font-weight:normal;">(m)</span></th>
+                            <th style="width: 10%;">補助線</th><th class="action-col">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="canvas-container" id="canvasContainer">
+            <div class="canvas-buttons">
+                <div style="display: flex; gap: 4px; background: rgba(255,255,255,0.9); padding: 4px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <button id="btnModeSelect" class="icon-btn" title="図形を選択してプロパティ変更・回転">👆</button>
+                    <button id="btnModePan" class="icon-btn active-btn" title="移動・ズーム（図形を掴んで動かす）">✋</button>
+                    <button id="btnModeText" class="icon-btn" title="テキストを追加（クリックで配置）">🔤</button>
+                    <button id="btnModeLine" class="icon-btn" title="連続線を追加（クリックで頂点追加、右クリックで確定）">〰️</button>
+                    <button id="btnModeErase" class="icon-btn" title="追加した図形を削除（クリックで削除）">🧽</button>
+                </div>
+                <div style="display: flex; gap: 4px; background: rgba(255,255,255,0.9); padding: 4px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <button id="btnZoomFit" class="icon-btn" title="図形全体が画面に収まるように表示をリセットします" style="font-size: 0.8rem; font-weight: bold; width: auto; padding: 0 10px;">🔍 全体表示</button>
+                    <button id="btnToggleMap" class="icon-btn" style="font-size: 0.8rem; font-weight: bold; width: auto; padding: 0 10px;">🗺️ 地図ビュー</button>
+                </div>
+            </div>
+            
+            <div id="propertyPanel" class="property-panel" style="display: none;">
+                <div style="font-size: 0.8rem; font-weight: bold; margin-bottom: 2px; color: #4b5563; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px;">🎨 プロパティ</div>
+                <div class="prop-row"><label>色:</label><input type="color" id="propColor" value="#059669"></div>
+                <div class="prop-row" id="rowLineWidth"><label>太さ:</label><input type="number" id="propLineWidth" min="1" max="20" value="2"></div>
+                <div class="prop-row" id="rowLineStyle">
+                    <label>線種:</label>
+                    <select id="propLineStyle"><option value="solid">実線</option><option value="dashed">破線</option><option value="dotted">点線</option></select>
+                </div>
+                <div class="prop-row" id="rowFontSize" style="display: none;"><label>サイズ:</label><input type="number" id="propFontSize" min="8" max="100" value="14"></div>
+                <div style="text-align: right; margin-top: 4px;"><button id="btnCloseProp" class="small" style="background-color: #9ca3af; height: 20px;">閉じる</button></div>
+            </div>
+
+            <canvas id="previewCanvas"></canvas>
+            <div id="tooltip" class="tooltip"></div>
+            <div id="mapContainer"></div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="pasteModal" class="modal"><div class="modal-content">
+        <h3>データを貼り付け</h3>
+        <p style="font-size: 0.85rem; color: #4b5563; margin-bottom: 10px;">Excelなどでコピーしたデータを下の枠内に貼り付け（Ctrl+V または Cmd+V）して、「反映」を押してください。</p>
+        <textarea id="pasteArea" rows="10" placeholder="器械点&#9;視準点&#9;方位角&#9;高低角&#9;斜距離"></textarea>
+        <div style="margin-top: 10px; font-size: 0.85rem;"><label style="display: flex; align-items: center; gap: 5px; cursor: pointer;"><input type="checkbox" id="chkConvertEPtoBP" checked>最後の視準点が「E.P」等の場合、自動で最初の器械点に変換して閉合させる</label></div>
+        <div style="text-align: right; margin-top: 15px; display: flex; justify-content: flex-end; gap: 10px;">
+            <button id="btnCancelPaste" style="background: #7C848C;">キャンセル</button><button id="btnApplyPaste" style="background-color: #B36A22;">反映</button>
+        </div>
+    </div></div>
+
+    <div id="dmsModal" class="modal"><div class="modal-content">
+        <h3>座標の貼り付け</h3>
+        <p style="font-size: 0.85rem; color: #4b5563; margin-bottom: 10px;">以下の形式に対応しています。<br>・Google Map形式 (例: 34.21913, 135.29695)<br>・度分秒(N/E)形式 (例: 34°13'09.8"N 135°17'45.0"E)<br>・改行で緯度・経度を分けた形式</p>
+        <textarea id="dmsArea" rows="10" placeholder="34.2191345, 135.2969549&#10;または&#10;34°13'09.8&quot;N 135°17'45.0&quot;E"></textarea>
+        <div style="text-align: right; margin-top: 15px; display: flex; justify-content: flex-end; gap: 10px;">
+            <button id="btnCancelDMS" style="background: #7C848C;">キャンセル</button><button id="btnApplyDMS" style="background-color: #664F82;">変換して反映</button>
+        </div>
+    </div></div>
+
+    <div id="attrPasteModal" class="modal"><div class="modal-content">
+        <h3>属性データを貼り付け</h3>
+        <p style="font-size: 0.85rem; color: #4b5563; margin-bottom: 10px;">Excelなどでコピーしたデータを下の枠内に貼り付けして、「反映」を押してください。<br>・<strong>「項目名」と「値」の2列</strong>をコピーした場合：全体を置き換えます。<br>・<strong>「値」の1列のみ</strong>をコピーした場合：現在の項目名に対して値を上書きします。</p>
+        <textarea id="attrPasteArea" rows="6" placeholder="項目名&#9;値&#10;項目名&#9;値"></textarea>
+        <div style="text-align: right; margin-top: 15px; display: flex; justify-content: flex-end; gap: 10px;">
+            <button id="btnCancelAttrPaste" style="background: #7C848C;">キャンセル</button><button id="btnApplyAttrPaste" style="background-color: #B36A22;">反映</button>
+        </div>
+    </div></div>
+
+    <div id="exportModal" class="modal"><div class="modal-content" style="max-width: 400px;">
+        <h3 id="exportModalTitle" style="margin-top: 0; font-size: 1.1rem;">ファイルの保存</h3>
+        <p style="font-size: 0.85rem; color: #4b5563; margin-bottom: 10px;">出力するファイル名を入力してください。</p>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px;">
+            <input type="text" id="inputExportFileName" value="compass_survey_data" style="flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 0.9rem;">
+            <span id="exportExtension" style="font-size: 0.9rem; color: #4b5563;">.json</span>
+        </div>
+        <div id="htmlExportOptions" style="display: none; margin-bottom: 15px; background: #f9fafb; padding: 10px; border: 1px solid #e5e7eb; border-radius: 4px;">
+            <div style="font-size: 0.85rem; font-weight: bold; margin-bottom: 8px; color: #4b5563;">📄 用紙設定（印刷・PDF化用）</div>
+            <div style="display: flex; gap: 20px; font-size: 0.85rem; margin-bottom: 8px;">
+                <label style="cursor: pointer;"><input type="radio" name="paperSize" value="A4" checked> A4</label>
+                <label style="cursor: pointer;"><input type="radio" name="paperSize" value="A3"> A3</label>
+            </div>
+            <div style="display: flex; gap: 20px; font-size: 0.85rem; margin-bottom: 12px;">
+                <label style="cursor: pointer;"><input type="radio" name="paperOrientation" value="portrait"> 縦</label>
+                <label style="cursor: pointer;"><input type="radio" name="paperOrientation" value="landscape" checked> 横</label>
+            </div>
+            <div style="font-size: 0.85rem; font-weight: bold; margin-bottom: 8px; color: #4b5563;">🔍 縮尺</div>
+            <div style="display: flex; gap: 12px; font-size: 0.85rem; flex-wrap: wrap; align-items: center;">
+                <label style="cursor: pointer;"><input type="radio" name="printScale" value="auto" checked> 自動調整</label>
+                <label style="cursor: pointer;"><input type="radio" name="printScale" value="100"> 1/100</label>
+                <label style="cursor: pointer;"><input type="radio" name="printScale" value="200"> 1/200</label>
+                <label style="cursor: pointer;"><input type="radio" name="printScale" value="300"> 1/300</label>
+                <label style="cursor: pointer;"><input type="radio" name="printScale" value="400"> 1/400</label>
+                <label style="cursor: pointer;"><input type="radio" name="printScale" value="500"> 1/500</label>
+                <label style="cursor: pointer;"><input type="radio" name="printScale" value="600"> 1/600</label>
+                <label style="cursor: pointer;"><input type="radio" name="printScale" value="1000"> 1/1000</label>
+                <label style="cursor: pointer;"><input type="radio" name="printScale" value="2000"> 1/2000</label>
+                <label style="cursor: pointer;"><input type="radio" name="printScale" value="3000"> 1/3000</label>
+                <label style="cursor: pointer;"><input type="radio" name="printScale" value="4000"> 1/4000</label>
+                <label style="cursor: pointer;"><input type="radio" name="printScale" value="5000"> 1/5000</label>
+                <label style="cursor: pointer;"><input type="radio" name="printScale" value="6000"> 1/6000</label>
+                <label style="cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                    <input type="radio" name="printScale" value="custom" id="radioCustomScale"> 任意 1/
+                    <input type="number" id="inputCustomScale" value="1500" style="width: 65px; padding: 2px; border: 1px solid #ccc; border-radius: 2px; font-size: 0.85rem;">
+                </label>
+            </div>
+            <div style="font-size: 0.85rem; font-weight: bold; margin-top: 12px; margin-bottom: 8px; color: #4b5563;">📄 成果表の折り返し</div>
+            <div style="display: flex; gap: 12px; font-size: 0.85rem;">
+                <select id="selSplitRows" style="padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-family: inherit;">
+                    <option value="0">折り返さない</option><option value="30">30行ごと</option><option value="40">40行ごと</option><option value="50" selected>50行ごと</option><option value="100">100行ごと</option>
+                </select>
+            </div>
+            <div style="margin-top: 12px; font-size: 0.85rem;">
+                <label style="cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                    <input type="checkbox" id="chkExportMapBg"> 背景に地理院地図（淡色）を表示する
+                </label>
+            </div>
+        </div>
+        <div style="text-align: right; display: flex; justify-content: flex-end; gap: 10px;">
+            <button id="btnCancelExport" style="background: #7C848C;">キャンセル</button><button id="btnApplyExport" style="background-color: #2E5C8A;">保存</button>
+        </div>
+    </div></div>
+
+    <div id="importPreviewModal" class="modal"><div class="modal-content" style="max-width: 850px; width: 95%; display: flex; flex-direction: column;">
+        <h3 style="margin-top: 0; margin-bottom: 10px; font-size: 1.1rem;">データの読み込み</h3>
+        <p style="font-size: 0.85rem; color: #4b5563; margin-top: 0; margin-bottom: 10px;">左のリストからファイルを選ぶと、プレビューが表示されます。</p>
+        <div style="display: flex; gap: 15px; flex: 1; min-height: 350px; max-height: 60vh;">
+            <div style="flex: 1.2; border: 1px solid var(--border-color); border-radius: 4px; overflow-y: auto; background: #fff;">
+                <ul id="importFileList" style="list-style: none; margin: 0; padding: 0;"></ul>
+            </div>
+            <div style="flex: 1.8; display: flex; flex-direction: column; background: #f3f4f6; border-radius: 4px; padding: 10px; border: 1px solid var(--border-color);">
+                <div style="flex: 1; display: flex; justify-content: center; align-items: center; background: #fff; margin-bottom: 10px; border: 1px solid #d1d5db; min-height: 250px;">
+                    <img id="importPreviewImage" src="" alt="プレビュー" style="max-width: 100%; max-height: 250px; object-fit: contain; display: none;">
+                    <span id="importNoPreviewText" style="color: #9ca3af; font-size: 0.9rem;">ファイルを選択してください</span>
+                </div>
+                <div id="importPreviewInfo" style="font-size: 0.85rem; color: #1f2937; height: 60px; overflow-y: auto; line-height: 1.4;"></div>
+            </div>
+        </div>
+        <div style="text-align: right; margin-top: 15px; display: flex; justify-content: flex-end; gap: 10px;">
+            <button id="btnCancelImport" style="background: #7C848C;">キャンセル</button><button id="btnApplyImport" style="background-color: #B36A22;" disabled>開く</button>
+        </div>
+    </div></div>
+
+    <div id="confirmModal" class="modal"><div class="modal-content" style="max-width: 320px; text-align: center;">
+        <h3 id="confirmTitle" style="margin-top: 0;">確認</h3>
+        <p id="confirmMessage" style="font-size: 0.95rem; color: #4b5563; margin-bottom: 20px;">本当によろしいですか？</p>
+        <div style="display: flex; justify-content: center; gap: 15px;">
+            <button id="btnCancelConfirm" style="background: #7C848C;">キャンセル</button><button id="btnApplyConfirm" class="danger">実行する</button>
+        </div>
+    </div></div>
+
+    <div id="textPromptModal" class="modal"><div class="modal-content" style="max-width: 320px; text-align: center;">
+        <h3 style="margin-top: 0; font-size: 1.1rem;">テキストを追加</h3>
+        <input type="text" id="inputTextPrompt" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; box-sizing: border-box; margin-bottom: 10px;" placeholder="図面に追加するテキストを入力">
+        <div style="display: flex; gap: 15px; margin-bottom: 15px; align-items: center; justify-content: center; font-size: 0.85rem; color: #4b5563;">
+            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">文字色: <input type="color" id="inputTextColor" value="#059669" style="width: 32px; height: 32px; padding: 0; border: none; cursor: pointer; border-radius: 4px;"></label>
+            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">サイズ: <input type="number" id="inputTextSize" value="14" min="8" max="100" style="width: 50px; padding: 4px; border: 1px solid #ccc; border-radius: 3px;"></label>
+        </div>
+        <div style="display: flex; justify-content: center; gap: 15px;">
+            <button id="btnCancelTextPrompt" style="background: #7C848C;">キャンセル</button><button id="btnApplyTextPrompt" style="background-color: #2E5C8A;">追加</button>
+        </div>
+    </div></div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
