@@ -2251,7 +2251,7 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
 @page { size: ${pSize} ${ori}; margin: 0; }
 body { font-family: sans-serif; font-size: 10pt; background: #ececec; margin:0; padding-top: 60px; }
 .page-wrapper { width: 100%; display: flex; justify-content: center; }
-.page-container { position: relative; width: ${conf.w}mm; height: ${conf.h}mm; background: #fff; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.2); transform-origin: top center; transition: transform 0.1s ease; margin-bottom: 20px; }
+.page-container { position: relative; width: ${conf.w}mm; height: ${conf.h}mm; background: #fff; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.2); transform-origin: top center; transition: transform 0.1s ease; margin-bottom: 20px; flex-shrink: 0; }
 .draggable { position: absolute; z-index: 2; background: #fff; cursor: move; transform-origin: top left; white-space: nowrap; box-sizing: border-box; }
 .draggable.no-bg { background: transparent; }
 .draggable:not(.map-group):hover, .sub-draggable:hover { box-shadow: 0 0 12px rgba(46,92,138,0.4); outline: 2px dashed rgba(46,92,138,0.6); z-index: 10; }
