@@ -2264,7 +2264,7 @@ table { border-collapse: collapse; border: 1px solid #000; } th, td { border: 1p
 .btn-zoom { background: #52525b; color: white; border: 1px solid #71717a; border-radius: 4px; width: 24px; height: 24px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; padding: 0; line-height: 1; transition: all 0.2s; }
 .btn-zoom:hover { background: #6366f1; border-color: #818cf8; }
 .map-cropper { outline: 1px dashed transparent; pointer-events: auto; }
-.map-group:hover .map-cropper, .map-cropper.active { outline-color: #f59e0b; }
+.map-cropper.active { outline-color: #f59e0b; }
 .resize-handle { position: absolute; width: 12px; height: 12px; background: #fff; border: 1px solid #333; display: none; z-index: 10; pointer-events: auto; }
 .map-group:hover .resize-handle, .map-cropper.active .resize-handle { display: block; }
 .resize-handle.n { top: -6px; left: calc(50% - 6px); cursor: ns-resize; }
@@ -2572,10 +2572,10 @@ window.addEventListener('load', () => {
     function updateMapBg() {
         const isChecked = document.getElementById('chkBgMap').checked;
         const tileUrl = document.getElementById('bgMapType').value;
-        const mapDiv = document.getElementById('printMapBg');
+        const cropperDiv = document.getElementById('map-cropper');
         
         if (isChecked) {
-            mapDiv.style.display = 'block';
+            cropperDiv.style.display = 'block';
             if (!mapBg) {
                 mapBg = L.map('printMapBg', {
                     zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false,
@@ -2597,7 +2597,7 @@ window.addEventListener('load', () => {
                 mapBg.remove();
                 mapBg = null;
             }
-            mapDiv.style.display = 'none';
+            cropperDiv.style.display = 'none';
         }
     }
     
@@ -2607,7 +2607,7 @@ window.addEventListener('load', () => {
     if (document.getElementById('chkBgMap').checked) {
         setTimeout(updateMapBg, 100);
     } else {
-        document.getElementById('printMapBg').style.display = 'none';
+        document.getElementById('map-cropper').style.display = 'none';
     }
 
 });
