@@ -2233,7 +2233,7 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                 if (!outFileName.endsWith('.html')) outFileName += '.html';
 
                 const htmlContent = `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>平面図 (${pSize} ${ori})</title>
-${showMapBg ? `<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>` : ''}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
 <style>
 @page { size: ${pSize} ${ori}; margin: 0; }
 body { font-family: sans-serif; font-size: 10pt; background: #ececec; margin:0; padding-top: 60px; }
@@ -2506,6 +2506,7 @@ window.addEventListener('load', () => {
         const mapDiv = document.getElementById('printMapBg');
         
         if (isChecked) {
+            mapDiv.style.display = 'block';
             if (!mapBg) {
                 mapBg = L.map('printMapBg', {
                     zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false,
@@ -2518,10 +2519,10 @@ window.addEventListener('load', () => {
                     }
                 });
             }
+            mapBg.invalidateSize();
             L.tileLayer(tileUrl, { maxNativeZoom: 18, maxZoom: 24 }).addTo(mapBg);
             const bounds = L.latLngBounds([${latBottom}, ${lonLeft}], [${latTop}, ${lonRight}]);
             mapBg.fitBounds(bounds);
-            mapDiv.style.display = 'block';
         } else {
             if (mapBg) {
                 mapBg.remove();
