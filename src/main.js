@@ -2299,6 +2299,9 @@ table { border-collapse: collapse; border: 1px solid #000; } th, td { border: 1p
             <select id="plPaperSize" style="font-size:12px; padding:2px;">
                 <option value="A4" ${pSize==='A4'?'selected':''}>A4</option>
                 <option value="A3" ${pSize==='A3'?'selected':''}>A3</option>
+                <option value="A2" ${pSize==='A2'?'selected':''}>A2</option>
+                <option value="A1" ${pSize==='A1'?'selected':''}>A1</option>
+                <option value="A0" ${pSize==='A0'?'selected':''}>A0</option>
             </select>
             <select id="plOrientation" style="font-size:12px; padding:2px;">
                 <option value="landscape" ${ori==='landscape'?'selected':''}>横</option>

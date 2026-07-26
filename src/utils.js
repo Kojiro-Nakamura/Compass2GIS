@@ -7,7 +7,13 @@ export const CONSTANTS = {
         'A4_portrait': { w: 210, h: 296, expW: 1600, expH: 2262, paddingX: 250, paddingY: 300, shiftY: 150 },
         'A4_landscape': { w: 296, h: 210, expW: 2262, expH: 1600, paddingX: 300, paddingY: 200, shiftY: 50 },
         'A3_portrait': { w: 297, h: 420, expW: 2262, expH: 3200, paddingX: 350, paddingY: 400, shiftY: 200 },
-        'A3_landscape': { w: 420, h: 297, expW: 3200, expH: 2262, paddingX: 400, paddingY: 300, shiftY: 100 }
+        'A3_landscape': { w: 420, h: 297, expW: 3200, expH: 2262, paddingX: 400, paddingY: 300, shiftY: 100 },
+        'A2_portrait': { w: 420, h: 594, expW: 3200, expH: 4526, paddingX: 500, paddingY: 600, shiftY: 300 },
+        'A2_landscape': { w: 594, h: 420, expW: 4526, expH: 3200, paddingX: 600, paddingY: 500, shiftY: 200 },
+        'A1_portrait': { w: 594, h: 841, expW: 4526, expH: 6408, paddingX: 700, paddingY: 800, shiftY: 400 },
+        'A1_landscape': { w: 841, h: 594, expW: 6408, expH: 4526, paddingX: 800, paddingY: 700, shiftY: 300 },
+        'A0_portrait': { w: 841, h: 1189, expW: 6408, expH: 9060, paddingX: 1000, paddingY: 1100, shiftY: 550 },
+        'A0_landscape': { w: 1189, h: 841, expW: 9060, expH: 6408, paddingX: 1100, paddingY: 1000, shiftY: 450 }
     }
 };
 
