@@ -75,6 +75,7 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                     btnPasteAttr: $id('btnPasteAttr'), btnCancelAttrPaste: $id('btnCancelAttrPaste'), btnApplyAttrPaste: $id('btnApplyAttrPaste'),
                     exportModal: $id('exportModal'), exportModalTitle: $id('exportModalTitle'), inputExportFileName: $id('inputExportFileName'),
                     exportExtension: $id('exportExtension'), btnCancelExport: $id('btnCancelExport'), btnApplyExport: $id('btnApplyExport'),
+                    chkExportMapBg: $id('chkExportMapBg'),
                     htmlExportOptions: $id('htmlExportOptions'), inputCustomScale: $id('inputCustomScale'), radioCustomScale: $id('radioCustomScale'),
                     importPreviewModal: $id('importPreviewModal'), importFileList: $id('importFileList'), importPreviewImage: $id('importPreviewImage'),
                     importNoPreviewText: $id('importNoPreviewText'), importPreviewInfo: $id('importPreviewInfo'), btnCancelImport: $id('btnCancelImport'),
@@ -2260,6 +2261,12 @@ table { border-collapse: collapse; border: 1px solid #000; } th, td { border: 1p
             <span id="zoomLevel" style="font-size: 0.9rem; min-width: 45px; text-align: center; font-weight: bold;">100%</span>
             <button class="btn-zoom" id="btnZoomIn" title="拡大">＋</button>
             <button class="btn-zoom" id="btnFitScreen" title="画面に合わせる" style="width: auto; padding: 0 8px; font-size: 0.8rem; margin-left: 4px;">⛶ フィット</button>
+            <label style="font-size:13px; margin-left: 10px; cursor: pointer; color: white;"><input type="checkbox" id="chkBgMap" ${showMapBg ? 'checked' : ''}> 背景地図</label>
+            <select id="bgMapType" style="margin-left:5px; font-size:13px; padding: 2px;">
+                <option value="https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png">標準地図</option>
+                <option value="https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg">写真</option>
+                <option value="https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png" selected>淡色地図</option>
+            </select>
         </div>
     </div>
     <div>
@@ -2270,7 +2277,7 @@ table { border-collapse: collapse; border: 1px solid #000; } th, td { border: 1p
 <div class="page-wrapper">
     <div class="page-container">
         <div class="map-group draggable no-bg no-scale" style="position: absolute; left: ${expRes.x / expRes.pxPerMm}mm; top: ${expRes.y / expRes.pxPerMm}mm; width: ${expRes.w / expRes.pxPerMm}mm; height: ${expRes.h / expRes.pxPerMm}mm; z-index: 1;">
-            ${showMapBg ? `<div id="printMapBg" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.7; pointer-events: none;"></div>` : ''}
+            <div id="printMapBg" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.7; pointer-events: none;"></div>
             <img src="${expRes.dataURL}" draggable="false" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 1;">
             ${labelsHTML}
         </div>
@@ -2492,15 +2499,46 @@ window.addEventListener('load', () => {
         URL.revokeObjectURL(url);
     });
 
-    ${showMapBg ? `
-    const mapBg = L.map('printMapBg', {
-        zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false,
-        doubleClickZoom: false, boxZoom: false, keyboard: false, zoomSnap: 0
-    });
-    L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png', { maxNativeZoom: 18, maxZoom: 24 }).addTo(mapBg);
-    const bounds = L.latLngBounds([${latBottom}, ${lonLeft}], [${latTop}, ${lonRight}]);
-    mapBg.fitBounds(bounds);
-    ` : ''}
+    let mapBg = null;
+    function updateMapBg() {
+        const isChecked = document.getElementById('chkBgMap').checked;
+        const tileUrl = document.getElementById('bgMapType').value;
+        const mapDiv = document.getElementById('printMapBg');
+        
+        if (isChecked) {
+            if (!mapBg) {
+                mapBg = L.map('printMapBg', {
+                    zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false,
+                    doubleClickZoom: false, boxZoom: false, keyboard: false, zoomSnap: 0
+                });
+            } else {
+                mapBg.eachLayer(layer => {
+                    if (layer instanceof L.TileLayer) {
+                        mapBg.removeLayer(layer);
+                    }
+                });
+            }
+            L.tileLayer(tileUrl, { maxNativeZoom: 18, maxZoom: 24 }).addTo(mapBg);
+            const bounds = L.latLngBounds([${latBottom}, ${lonLeft}], [${latTop}, ${lonRight}]);
+            mapBg.fitBounds(bounds);
+            mapDiv.style.display = 'block';
+        } else {
+            if (mapBg) {
+                mapBg.remove();
+                mapBg = null;
+            }
+            mapDiv.style.display = 'none';
+        }
+    }
+    
+    document.getElementById('chkBgMap').addEventListener('change', updateMapBg);
+    document.getElementById('bgMapType').addEventListener('change', updateMapBg);
+    
+    if (document.getElementById('chkBgMap').checked) {
+        setTimeout(updateMapBg, 100);
+    } else {
+        document.getElementById('printMapBg').style.display = 'none';
+    }
 
 });
 <\/script></body></html>`;
