@@ -666,7 +666,7 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
             openExportModal(type) {
                 this.currentExportType = type;
                 const attrValues = this.state.attributes.map(a => a.value ? a.value.trim() : '').filter(v => v !== '');
-                this.els.inputExportFileName.value = attrValues.length > 0 ? attrValues.join('_') : 'compass_survey_data';
+                this.els.inputExportFileName.value = attrValues.length > 0 ? attrValues.join('_') : '令和8年度_育成複層林整備_山田太郎_No.10';
                 
                 if (type === 'json') { 
                     this.els.exportModalTitle.textContent = 'データの保存 (JSON)'; 
@@ -2197,7 +2197,7 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                     this.state.annotations.lines.forEach(l => features.push({ type: "Feature", properties: { "タイプ": "連続線", "回転角度": parseFloat(((l.rotation || 0) * 180 / Math.PI).toFixed(2)), ...customProps }, geometry: { type: "LineString", coordinates: l.points.map(pt => [lon0 + pt.x * lonDPM, lat0 + pt.y * CONSTANTS.LAT_DEG_PER_METER]) } }));
                 }
 
-                if (!fileName) fileName = 'compass_survey_data';
+                if (!fileName) fileName = '令和8年度_育成複層林整備_山田太郎_No.10';
                 if (!fileName.endsWith('.geojson')) fileName += '.geojson';
                 this._downloadFile("data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ type: "FeatureCollection", features }, null, 2)), fileName);
             }
@@ -2767,7 +2767,7 @@ window.addEventListener('load', () => {
 
             exportJSON(fileName) {
                 const st = { tableData: this.state.tableData, attributes: this.state.attributes, annotations: this.state.annotations, settings: { lat: this.els.inputLat.value, lon: this.els.inputLon.value, declination: this.els.inputDeclination.value, magDeclinationChecked: this.els.chkMagDeclination.checked, compassAdjustmentChecked: this.els.chkCompassAdjustment.checked, convertEPtoBPChecked: this.els.chkConvertEPtoBP ? this.els.chkConvertEPtoBP.checked : true, nodeLabelInterval: this.els.selNodeLabelInterval.value }, previewImage: this.generatePreviewImage() };
-                if (!fileName) fileName = 'compass_survey_data'; if (!fileName.endsWith('.json')) fileName += '.json';
+                if (!fileName) fileName = '令和8年度_育成複層林整備_山田太郎_No.10'; if (!fileName.endsWith('.json')) fileName += '.json';
                 this._downloadFile("data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(st)), fileName);
                 this.showToast('JSONファイルとして保存しました。');
             }
