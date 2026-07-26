@@ -2257,7 +2257,7 @@ body { font-family: sans-serif; font-size: 10pt; background: #ececec; margin:0; 
 .draggable:hover, .sub-draggable:hover, .map-group:hover { box-shadow: 0 0 12px rgba(46,92,138,0.4); outline: 2px dashed rgba(46,92,138,0.6); z-index: 10; }
 .compass-image { position: absolute; bottom: 30mm; left: 25mm; width: 30mm; height: 30mm; z-index: 3; }
 table { border-collapse: collapse; border: 1px solid #000; } th, td { border: 1px solid #000; padding: 6px; } th { background: #f2f2f2; }
-.attr-table-wrapper { top: 15mm; left: 15mm; } .result-table-wrapper { top: 15mm; right: 15mm; } .area-table-wrapper { top: 80mm; left: 15mm; }
+.attr-table-wrapper { top: 15mm; left: 15mm; } .result-table-wrapper { top: 15mm; right: 15mm; transform-origin: top right; } .area-table-wrapper { top: 80mm; left: 15mm; }
 .instruction { position: fixed; top: 0; left: 0; width: 100%; box-sizing: border-box; background: #3f3f46; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 .btn { background: #2E5C8A; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: bold; margin-left: 10px; }
 .btn-save { background: #059669; }
