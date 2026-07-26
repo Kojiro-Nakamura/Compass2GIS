@@ -2330,8 +2330,8 @@ window.addEventListener('load', () => {
         const r = el.getBoundingClientRect(), p = el.parentElement.getBoundingClientRect();
         
         if (!el.style.left) {
-            el.dataset.initLeft = (r.left - p.left) + 'px';
-            el.dataset.initTop = (r.top - p.top) + 'px';
+            el.dataset.initLeft = el.offsetLeft + 'px';
+            el.dataset.initTop = el.offsetTop + 'px';
             el.style.left = el.dataset.initLeft; 
             el.style.top = el.dataset.initTop;
             el.style.right = 'auto'; el.style.bottom = 'auto';
