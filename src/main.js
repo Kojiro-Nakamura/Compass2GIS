@@ -48,8 +48,8 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                         ['93', '94', '0', '0', '30', false], ['94', '91', '90', '0', '20', false]
                     ],
                     defaultAttributes: [
-                        { name: '年度', value: '令和8年度' }, { name: '事業名', value: '育成複層林整備' },
-                        { name: '所有者名', value: '山田太郎' }, { name: '備考', value: 'No.10' }
+                        { name: '年度', value: '令咁E年度' }, { name: '事業吁E, value: '育成褁E��林整傁E },
+                        { name: '所有老E��', value: '山田太郁E }, { name: '備老E, value: 'No.10' }
                     ]
                 };
             }
@@ -144,7 +144,7 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
 
             _initToolbarEvents() {
                 bindClick(this.els.btnLoadDemo, () => {
-                    this.showConfirm('現在のデータが上書きされます。デモデータを読み込みますか？', () => {
+                    this.showConfirm('現在のチE�Eタが上書きされます。デモチE�Eタを読み込みますか�E�E, () => {
                         this.state.attributes = JSON.parse(JSON.stringify(this.CONFIG.defaultAttributes));
                         this.renderAttrTable(); this.loadData(this.CONFIG.initialData); this.pushState();
                     });
@@ -264,11 +264,11 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                 this.els.selNodeLabelInterval.addEventListener('change', reDraw(false));
                 if (this.els.chkConvertEPtoBP) this.els.chkConvertEPtoBP.addEventListener('change', () => this.saveToLocalStorage());
 
-                bindClick(this.els.btnCopyClosureInfo, () => this._execCopy(this.els.closureInfo.innerText, '閉合状況をクリップボードにコピーしました。'));
+                bindClick(this.els.btnCopyClosureInfo, () => this._execCopy(this.els.closureInfo.innerText, '閉合状況をクリチE�Eボ�Eドにコピ�Eしました、E));
                 bindClick(this.els.btnCopyDeclination, () => {
                     const dec = this.els.inputDeclination.value;
-                    if (!dec) return this.showToast('偏角が入力されていません。');
-                    this._execCopy(dec, '偏角をクリップボードにコピーしました。');
+                    if (!dec) return this.showToast('偏角が入力されてぁE��せん、E);
+                    this._execCopy(dec, '偏角をクリチE�Eボ�Eドにコピ�Eしました、E);
                 });
             }
 
@@ -316,11 +316,11 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                     if (this.map) this.map.dragging.enable();
                 };
 
-                bindClick(this.els.btnModeSelect, () => { setMode('select'); this.showToast('変更したいテキストや線をクリックしてください'); });
+                bindClick(this.els.btnModeSelect, () => { setMode('select'); this.showToast('変更したぁE��キストや線をクリチE��してください'); });
                 bindClick(this.els.btnModePan, () => setMode('pan'));
-                bindClick(this.els.btnModeText, () => { setMode('text'); this.showToast('キャンバス上をクリックしてテキストを追加します'); });
-                bindClick(this.els.btnModeLine, () => { setMode('line'); this.showToast('クリックで頂点を追加、右クリックで線を確定します'); });
-                bindClick(this.els.btnModeErase, () => { setMode('erase'); this.showToast('削除したいテキストや線をクリックしてください'); });
+                bindClick(this.els.btnModeText, () => { setMode('text'); this.showToast('キャンバス上をクリチE��してチE��ストを追加しまぁE); });
+                bindClick(this.els.btnModeLine, () => { setMode('line'); this.showToast('クリチE��で頂点を追加、右クリチE��で線を確定しまぁE); });
+                bindClick(this.els.btnModeErase, () => { setMode('erase'); this.showToast('削除したぁE��キストや線をクリチE��してください'); });
 
                 document.addEventListener('keydown', (e) => {
                     const activeModal = this.modals.find(m => m.el && (m.el.style.display === 'flex' || m.el.style.display === 'block'));
@@ -489,12 +489,12 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                 if (this.isMapMode) { this.updateMapDrawing(false); this._updateMapTempLine(); }
             }
 
-            // ★地図のズームレベルに関わらず、画面上のピクセルサイズを内部距離(m)に変換する関数
+            // ☁E��図のズームレベルに関わらず、画面上�Eピクセルサイズを�E部距離(m)に変換する関数
             _getPixelsToInternalDistance(px) {
                 if (this.isMapMode && this.map) {
                     const center = this.map.getCenter();
                     const point = this.map.project(center);
-                    const latlng2 = this.map.unproject(point.add([0, -px])); // 上にpxピクセル移動
+                    const latlng2 = this.map.unproject(point.add([0, -px])); // 上にpxピクセル移勁E
                     const im1 = this.getInternalCoordsFromLatLng(center.lat, center.lng);
                     const im2 = this.getInternalCoordsFromLatLng(latlng2.lat, latlng2.lng);
                     return Math.sqrt(Math.pow(im2.x - im1.x, 2) + Math.pow(im2.y - im1.y, 2));
@@ -616,24 +616,24 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
             }
 
             _execCopy(text, successMsg) {
-                if (!text) return this.showToast('コピーするデータがありません。');
+                if (!text) return this.showToast('コピ�EするチE�Eタがありません、E);
                 const ta = document.createElement("textarea");
                 ta.value = text; ta.style.position = "fixed"; ta.style.left = "-9999px"; document.body.appendChild(ta);
                 ta.focus(); ta.select();
-                try { document.execCommand('copy') ? this.showToast(successMsg) : this.showToast('コピーに失敗しました。'); } 
-                catch (err) { this.showToast('コピーに失敗しました。'); }
+                try { document.execCommand('copy') ? this.showToast(successMsg) : this.showToast('コピ�Eに失敗しました、E); } 
+                catch (err) { this.showToast('コピ�Eに失敗しました、E); }
                 document.body.removeChild(ta);
             }
 
-            copyAttrToClipboard() { this._execCopy(this.state.attributes.map(a => `${a.name}\t${a.value}`).join('\n'), '属性データをクリップボードにコピーしました。'); }
+            copyAttrToClipboard() { this._execCopy(this.state.attributes.map(a => `${a.name}\t${a.value}`).join('\n'), '属性チE�EタをクリチE�Eボ�Eドにコピ�Eしました、E); }
             copyLatLonToClipboard() {
                 const lat = this.els.inputLat.value, lon = this.els.inputLon.value;
-                if (!lat || !lon) return this.showToast('緯度経度が入力されていません。');
-                this._execCopy(`${lat}, ${lon}`, '緯度経度をクリップボードにコピーしました。');
+                if (!lat || !lon) return this.showToast('緯度経度が�E力されてぁE��せん、E);
+                this._execCopy(`${lat}, ${lon}`, '緯度経度をクリチE�Eボ�Eドにコピ�Eしました、E);
             }
-            copyToClipboard() { this._execCopy(this.state.tableData.map(r => r.join('\t')).join('\n'), '測量データをクリップボードにコピーしました。'); }
+            copyToClipboard() { this._execCopy(this.state.tableData.map(r => r.join('\t')).join('\n'), '測量データをクリチE�Eボ�Eドにコピ�Eしました、E); }
 
-            showConfirm(message, callback, title = '確認') {
+            showConfirm(message, callback, title = '確誁E) {
                 this.els.confirmTitle.textContent = title;
                 this.els.confirmMessage.textContent = message;
                 this.confirmCallback = callback;
@@ -641,9 +641,9 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
             }
 
             clearData() {
-                this.showConfirm('すべての測量データをクリアしますか？', () => {
+                this.showConfirm('すべての測量データをクリアしますか�E�E, () => {
                     this.state.tableData = []; this.renderTable(); this.updateDrawing(true);
-                    this.saveToLocalStorage(); this.pushState(); this.showToast('データをクリアしました。');
+                    this.saveToLocalStorage(); this.pushState(); this.showToast('チE�Eタをクリアしました、E);
                 });
             }
 
@@ -665,22 +665,22 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
             openExportModal(type) {
                 this.currentExportType = type;
                 const attrValues = this.state.attributes.map(a => a.value ? a.value.trim() : '').filter(v => v !== '');
-                this.els.inputExportFileName.value = attrValues.length > 0 ? attrValues.join('_') : '令和8年度_育成複層林整備_山田太郎_No.10';
+                this.els.inputExportFileName.value = attrValues.length > 0 ? attrValues.join('_') : '令咁E年度_育成褁E��林整備_山田太郎_No.10';
                 
                 if (type === 'json') { 
-                    this.els.exportModalTitle.textContent = 'データの保存 (JSON)'; 
+                    this.els.exportModalTitle.textContent = 'チE�Eタの保孁E(JSON)'; 
                     this.els.exportExtension.textContent = '.json'; 
                     this.els.htmlExportOptions.style.display = 'none'; 
-                    this.els.btnApplyExport.textContent = '保存';
+                    this.els.btnApplyExport.textContent = '保孁E;
                 }
                 else if (type === 'geojson') { 
-                    this.els.exportModalTitle.textContent = 'GeoJSON出力'; 
+                    this.els.exportModalTitle.textContent = 'GeoJSON出劁E; 
                     this.els.exportExtension.textContent = '.geojson'; 
                     this.els.htmlExportOptions.style.display = 'none'; 
-                    this.els.btnApplyExport.textContent = '保存';
+                    this.els.btnApplyExport.textContent = '保孁E;
                 }
                 else if (type === 'html') { 
-                    this.els.exportModalTitle.textContent = '平面図出力設定'; 
+                    this.els.exportModalTitle.textContent = '平面図出力設宁E; 
                     this.els.exportExtension.textContent = '.html'; 
                     this.els.htmlExportOptions.style.display = 'block'; 
                     this.els.btnApplyExport.textContent = 'プレビュー';
@@ -725,14 +725,14 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                 if (rowData.length < 6) rowData[5] = isAux;
 
                 const tdAux = document.createElement('td'), chkAux = document.createElement('input');
-                chkAux.type = 'checkbox'; chkAux.checked = isAux; chkAux.title = 'チェックを入れると作図から除外され、補助線になります';
+                chkAux.type = 'checkbox'; chkAux.checked = isAux; chkAux.title = 'チェチE��を�Eれると作図から除外され、補助線になりまぁE;
                 chkAux.addEventListener('change', (e) => { this.state.tableData[index][5] = e.target.checked; this.updateDrawing(false); this.saveToLocalStorage(); this.pushState(); });
                 tdAux.appendChild(chkAux); tr.appendChild(tdAux);
 
                 const tdAction = document.createElement('td'); tdAction.className = 'action-col';
                 const btnIn = document.createElement('button'), btnDel = document.createElement('button');
-                btnIn.className = 'small'; btnIn.textContent = '＋'; btnIn.onclick = () => { this.state.tableData.splice(index + 1, 0, ['', '', '', '', '', false]); this.renderTable(); this.saveToLocalStorage(); this.pushState(); };
-                btnDel.className = 'small danger'; btnDel.textContent = '－'; btnDel.onclick = () => { this.state.tableData.splice(index, 1); this.renderTable(); this.updateDrawing(); this.saveToLocalStorage(); this.pushState(); };
+                btnIn.className = 'small'; btnIn.textContent = '�E�E; btnIn.onclick = () => { this.state.tableData.splice(index + 1, 0, ['', '', '', '', '', false]); this.renderTable(); this.saveToLocalStorage(); this.pushState(); };
+                btnDel.className = 'small danger'; btnDel.textContent = '�E�E; btnDel.onclick = () => { this.state.tableData.splice(index, 1); this.renderTable(); this.updateDrawing(); this.saveToLocalStorage(); this.pushState(); };
                 tdAction.appendChild(btnIn); tdAction.appendChild(btnDel); tr.appendChild(tdAction);
 
                 this.validateRow(tr);
@@ -745,7 +745,7 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                 const fVal = fromInp.value.trim(), tVal = toInp.value.trim();
                 if (fVal && tVal && fVal === tVal) {
                     fromInp.classList.add('error'); toInp.classList.add('error');
-                    fromInp.title = '警告: 器械点と視準点が同じ名前です'; toInp.title = '警告: 器械点と視準点が同じ名前です';
+                    fromInp.title = '警呁E 器械点と視準点が同じ名前でぁE; toInp.title = '警呁E 器械点と視準点が同じ名前でぁE;
                 } else {
                     fromInp.classList.remove('error'); toInp.classList.remove('error');
                     fromInp.title = ''; toInp.title = '';
@@ -787,7 +787,7 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                 this.state.attributes.forEach((attr, index) => {
                     const tr = document.createElement('tr');
                     const tdN = document.createElement('td'), inpN = document.createElement('input');
-                    inpN.type = 'text'; inpN.value = attr.name; inpN.placeholder = '項目名';
+                    inpN.type = 'text'; inpN.value = attr.name; inpN.placeholder = '頁E��吁E;
                     inpN.addEventListener('input', e => { this.state.attributes[index].name = e.target.value; this.saveToLocalStorage(); });
                     inpN.addEventListener('change', () => this.pushState());
                     tdN.appendChild(inpN);
@@ -800,8 +800,8 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                     
                     const tdA = document.createElement('td'); tdA.className = 'action-col';
                     const btnI = document.createElement('button'), btnD = document.createElement('button');
-                    btnI.className = 'small'; btnI.textContent = '＋'; btnI.addEventListener('click', () => { this.state.attributes.splice(index + 1, 0, { name: '', value: '' }); this.renderAttrTable(); this.saveToLocalStorage(); this.pushState(); });
-                    btnD.className = 'small danger'; btnD.textContent = '－'; btnD.addEventListener('click', () => { this.state.attributes.splice(index, 1); this.renderAttrTable(); this.saveToLocalStorage(); this.pushState(); });
+                    btnI.className = 'small'; btnI.textContent = '�E�E; btnI.addEventListener('click', () => { this.state.attributes.splice(index + 1, 0, { name: '', value: '' }); this.renderAttrTable(); this.saveToLocalStorage(); this.pushState(); });
+                    btnD.className = 'small danger'; btnD.textContent = '�E�E; btnD.addEventListener('click', () => { this.state.attributes.splice(index, 1); this.renderAttrTable(); this.saveToLocalStorage(); this.pushState(); });
                     tdA.appendChild(btnI); tdA.appendChild(btnD);
                     tr.appendChild(tdN); tr.appendChild(tdV); tr.appendChild(tdA);
                     this.els.attrTableBody.appendChild(tr);
@@ -812,22 +812,22 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                 const container = $id('areaResults');
                 if (complexAreas.length > 0) {
                     container.style.display = 'block';
-                    let html = '<div style="display: flex; justify-content: flex-start; align-items: center; gap: 8px; margin-bottom: 2px;"><div style="font-weight: bold; color: #217270; font-size: 0.75rem;">■ 区画ごとの面積</div><button id="btnCopyAreaResults" class="small" style="background-color: #2E5C8A; color: white; height: 20px; font-size: 0.7rem; padding: 2px 4px;">📋 コピー</button></div><div class="area-container">';
-                    let totalNetArea = 0, holeGlobalIndex = 1, copyText = '区画名 面積(ha)\n'; 
+                    let html = '<div style="display: flex; justify-content: flex-start; align-items: center; gap: 8px; margin-bottom: 2px;"><div style="font-weight: bold; color: #217270; font-size: 0.75rem;">■ 区画ごとの面穁E/div><button id="btnCopyAreaResults" class="small" style="background-color: #2E5C8A; color: white; height: 20px; font-size: 0.7rem; padding: 2px 4px;">📋 コピ�E</button></div><div class="area-container">';
+                    let totalNetArea = 0, holeGlobalIndex = 1, copyText = '区画吁E面穁Eha)\n'; 
                     
                     complexAreas.forEach((a, i) => {
                         const netHaTxt = Utils.round4(a.netArea / 10000); totalNetArea += parseFloat(netHaTxt);
                         let donutL = '', donutC = '';
                         if (a.isDonut) {
                             const totalHaTxt = Utils.round4(a.area / 10000);
-                            copyText += `区画 ${i + 1} (全体)  ${totalHaTxt} ha\n`;
+                            copyText += `区画 ${i + 1} (全佁E  ${totalHaTxt} ha\n`;
                             a.holes.forEach(h => {
                                 const hAreaTxt = Utils.round4(h.area / 10000); h.globalIndex = holeGlobalIndex;
-                                donutC += `  － 除地 ${h.globalIndex}  ${hAreaTxt} ha\n`; holeGlobalIndex++;
+                                donutC += `  �E�E除地 ${h.globalIndex}  ${hAreaTxt} ha\n`; holeGlobalIndex++;
                             });
-                            donutL = `<span style="font-size:0.75rem; color:#A13D44; margin-left:4px;">(内 除地あり)</span>`;
+                            donutL = `<span style="font-size:0.75rem; color:#A13D44; margin-left:4px;">(冁E除地あり)</span>`;
                             copyText += donutC;
-                            copyText += `区画 ${i + 1} 小計  ${netHaTxt} ha\n`;
+                            copyText += `区画 ${i + 1} 小訁E ${netHaTxt} ha\n`;
                         } else {
                             copyText += `区画 ${i + 1}  ${netHaTxt} ha\n`;
                         }
@@ -837,10 +837,10 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                     html += '</div>';
                     if (complexAreas.length > 1) {
                         const tTxt = Utils.round4(totalNetArea);
-                        html += `<div class="area-total"><span>合計面積:</span><span>${tTxt} ha</span></div>`; copyText += `合計 ${tTxt}\n`;
+                        html += `<div class="area-total"><span>合計面穁E</span><span>${tTxt} ha</span></div>`; copyText += `合訁E${tTxt}\n`;
                     }
                     container.innerHTML = html;
-                    bindClick($id('btnCopyAreaResults'), () => this._execCopy(copyText.trim(), '面積結果をクリップボードにコピーしました。'));
+                    bindClick($id('btnCopyAreaResults'), () => this._execCopy(copyText.trim(), '面積結果をクリチE�Eボ�Eドにコピ�Eしました、E));
                 } else {
                     container.style.display = 'none';
                 }
@@ -849,14 +849,14 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
             updateClosureInfo(errorX, errorY, totalLength, isClosed) {
                 const info = this.els.closureInfo;
                 info.style.display = 'inline-block'; info.style.fontWeight = 'normal';
-                if (totalLength === 0) { info.style.color = '#9ca3af'; info.innerHTML = `（閉合誤差：- m　閉合比：-　面積：- ha　周長：- m）`; return; }
+                if (totalLength === 0) { info.style.color = '#9ca3af'; info.innerHTML = `�E�閉合誤差�E�E m　閉合比！E　面積！E ha　周長�E�E m�E�`; return; }
                 const errDist = Math.sqrt(errorX * errorX + errorY * errorY), ratio = errDist > 0 ? totalLength / errDist : 0;
                 if (this.els.chkCompassAdjustment.checked && isClosed) {
                     info.style.color = '#064e3b';
                     const polyPts = [{x: 0, y: 0}, ...this.state.points.filter(p => p.type === 'main' && p.isDraw).map(p => ({x: p.toX, y: p.toY}))];
-                    info.innerHTML = `（閉合誤差：${errDist.toFixed(3)}m　閉合比：1/${Math.round(ratio).toLocaleString()}　面積：${Utils.round4(Utils.calculatePolygonArea(polyPts) / 10000)}ha　周長：${totalLength.toFixed(1)}m）`;
+                    info.innerHTML = `�E�閉合誤差�E�E{errDist.toFixed(3)}m　閉合比！E/${Math.round(ratio).toLocaleString()}　面積！E{Utils.round4(Utils.calculatePolygonArea(polyPts) / 10000)}ha　周長�E�E{totalLength.toFixed(1)}m�E�`;
                 } else {
-                    info.style.color = '#1f2937'; info.innerHTML = `（閉合誤差：- m　閉合比：-　面積：- ha　周長：- m）`;
+                    info.style.color = '#1f2937'; info.innerHTML = `�E�閉合誤差�E�E m　閉合比！E　面積！E ha　周長�E�E m�E�`;
                 }
             }
 
@@ -871,7 +871,7 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
 
             applyPasteModal() {
                 const text = this.els.pasteArea.value;
-                if (!text) return this.showToast('データが入力されていません。');
+                if (!text) return this.showToast('チE�Eタが�E力されてぁE��せん、E);
                 
                 const rows = text.split(/\r\n|\n|\r/).filter(r => r.trim() !== '');
                 const newData = []; let hasValidData = false;
@@ -886,7 +886,7 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                         }
                         if (cells.length > 5) {
                             let val = cells[5].trim().toLowerCase();
-                            if (['true','1','補助線','はい'].includes(val)) newRow[5] = true;
+                            if (['true','1','補助緁E,'はぁE].includes(val)) newRow[5] = true;
                         }
                         newData.push(newRow); hasValidData = true;
                     }
@@ -896,15 +896,15 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                     this.state.tableData = newData;
                     if (this.els.chkConvertEPtoBP && this.els.chkConvertEPtoBP.checked) this.resolveEPtoBP();
                     this.renderTable(); this.updateDrawing(true); this.saveToLocalStorage(); this.pushState();
-                    this.showToast('データを貼り付けました。'); this.closeModal(this.els.pasteModal, this.els.pasteArea);
+                    this.showToast('チE�Eタを貼り付けました、E); this.closeModal(this.els.pasteModal, this.els.pasteArea);
                 } else {
-                    this.showToast('有効なデータが見つかりませんでした。タブ区切りのデータが必要です。');
+                    this.showToast('有効なチE�Eタが見つかりませんでした。タブ区刁E��のチE�Eタが忁E��です、E);
                 }
             }
 
             applyDMSModal() {
                 const text = this.els.dmsArea.value.trim();
-                if (!text) return this.showToast('データが入力されていません。');
+                if (!text) return this.showToast('チE�Eタが�E力されてぁE��せん、E);
                 let lat = null, lon = null;
                 const decMatch = text.match(/^\s*(-?\d+\.\d+)\s*[, ]\s*(-?\d+\.\d+)\s*$/);
                 
@@ -926,16 +926,16 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
 
                 if (lat !== null && lon !== null && !isNaN(lat) && !isNaN(lon)) {
                     this.els.inputLat.value = lat.toFixed(6); this.els.inputLon.value = lon.toFixed(6);
-                    this.calculateMagDeclination(); this.showToast('座標を変換して反映しました。');
+                    this.calculateMagDeclination(); this.showToast('座標を変換して反映しました、E);
                     this.closeModal(this.els.dmsModal, this.els.dmsArea);
-                } else { this.showToast('正しい座標形式で読み取れませんでした。'); }
+                } else { this.showToast('正しい座標形式で読み取れませんでした、E); }
             }
 
             applyAttrPasteModal() {
                 const text = this.els.attrPasteArea.value;
-                if (!text) return this.showToast('データが入力されていません。');
+                if (!text) return this.showToast('チE�Eタが�E力されてぁE��せん、E);
                 const rows = text.split(/\r\n|\n|\r/).filter(r => r.trim() !== '');
-                if (rows.length === 0) return this.showToast('有効なデータがありません。');
+                if (rows.length === 0) return this.showToast('有効なチE�Eタがありません、E);
 
                 if (rows.some(r => r.includes('\t'))) {
                     const newAttrs = [];
@@ -956,7 +956,7 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                     });
                 }
                 this.renderAttrTable(); this.saveToLocalStorage(); this.pushState();
-                this.showToast('属性データを貼り付けました。'); this.closeModal(this.els.attrPasteModal, this.els.attrPasteArea);
+                this.showToast('属性チE�Eタを貼り付けました、E); this.closeModal(this.els.attrPasteModal, this.els.attrPasteArea);
             }
 
             resolveEPtoBP() {
@@ -993,7 +993,7 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                 this.els.dropdown.innerHTML = ''; this.state.dropdownSelectedIndex = -1; let hasItems = false;
                 const addOption = (text, isAuto = false) => {
                     const li = document.createElement('li'); li.dataset.value = text;
-                    li.innerHTML = isAuto ? `<span style="color:var(--primary);font-weight:bold;">✨ ${text}</span> (自動)` : text;
+                    li.innerHTML = isAuto ? `<span style="color:var(--primary);font-weight:bold;">✨ ${text}</span> (自勁E` : text;
                     li.onmousedown = (e) => { e.preventDefault(); e.stopPropagation(); this.applyDropdownSelection(input, colIndex, rowIndex, text, input.closest('tr')); };
                     this.els.dropdown.appendChild(li); hasItems = true;
                 };
@@ -1629,7 +1629,7 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                 }
             };
 
-            // ==== CanvasとMapのドラッグ操作を統合したhandleMouseMove ====
+            // ==== CanvasとMapのドラチE��操作を統合したhandleMouseMove ====
             handleMouseMove = (e) => {
                 if (this.isMapMode && this.state.mapView.isRightDragging) {
                     const dx = e.clientX - this.state.mapView.lastMouseX, dy = e.clientY - this.state.mapView.lastMouseY;
@@ -1639,7 +1639,7 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                     return;
                 }
 
-                // 1. 【共通化】現在のマウス位置から「内部座標」を計算する
+                // 1. 【�E通化】現在のマウス位置から「�E部座標」を計算すめE
                 let currentInternalX, currentInternalY, mX, mY;
                 if (this.isMapMode) {
                     const rect = this.els.mapContainer.getBoundingClientRect();
@@ -1658,7 +1658,7 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                     currentInternalY = (this.state.view.offsetY - mY) / this.state.view.scale;
                 }
 
-                // 2. 回転処理 (isRotating)
+                // 2. 回転処琁E(isRotating)
                 if (this.state.view.isRotating && this.state.view.rotatingTarget) {
                     const ref = this.state.view.rotatingTarget.ref;
                     let cPx, cPy;
@@ -1703,7 +1703,7 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                     return;
                 }
 
-                // 3. 移動処理 (isMovingAnnotation)
+                // 3. 移動�E琁E(isMovingAnnotation)
                 if (this.state.view.isMovingAnnotation && this.state.view.movingTarget && this.state.view.movingInitialState) {
                     const dx = e.clientX - this.state.view.dragStartX;
                     const dy = e.clientY - this.state.view.dragStartY;
@@ -1750,7 +1750,7 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                     return;
                 }
 
-                // 4. キャンバスパン移動処理
+                // 4. キャンバスパン移動�E琁E
                 if (this.state.view.isRightDragging || this.state.view.isDragging) {
                     const isRight = this.state.view.isRightDragging;
                     const dx = e.clientX - this.state.view.lastMouseX, dy = e.clientY - this.state.view.lastMouseY;
@@ -1762,7 +1762,7 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                     this.state.view.lastMouseX = e.clientX; this.state.view.lastMouseY = e.clientY;
                 }
 
-                // 5. ライン描画モード時のガイド線
+                // 5. ライン描画モード時のガイド緁E
                 if (this.state.interactionMode === 'line') {
                     this.state.view.currentMouseInternalX = currentInternalX;
                     this.state.view.currentMouseInternalY = currentInternalY;
@@ -1775,7 +1775,7 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                     }
                 }
 
-                // 6. キャンバスホバー判定 (isMapMode ではない場合のみ)
+                // 6. キャンバスホバー判宁E(isMapMode ではなぁE��合�Eみ)
                 if (!this.isMapMode && ['pan', 'erase', 'select'].includes(this.state.interactionMode)) {
                     const { offsetX, offsetY, scale } = this.state.view;
                     const lat0 = parseFloat(this.els.inputLat.value) || 0, lon0 = parseFloat(this.els.inputLon.value) || 0;
@@ -1823,7 +1823,7 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                 }
             };
 
-            // リアルタイム描画更新用メソッド
+            // リアルタイム描画更新用メソチE��
             _updateLiveAnnotationDrawing() {
                 if (this.isMapMode) {
                     this.updateMapDrawing(false);
@@ -1840,9 +1840,9 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                 if (this.map) return;
                 const lat0 = parseFloat(this.els.inputLat.value) || 35.0, lon0 = parseFloat(this.els.inputLon.value) || 135.0;
                 this.map = L.map('mapContainer', { maxZoom: 24 }).setView([lat0, lon0], 16);
-                const to = { maxNativeZoom: 18, maxZoom: 24, attribution: "<a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>国土地理院</a>" };
+                const to = { maxNativeZoom: 18, maxZoom: 24, attribution: "<a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>国土地琁E��</a>" };
                 const std = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', to), photo = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg', to), pale = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png', to);
-                std.addTo(this.map); L.control.layers({"標準地図": std, "写真（オルソ）": photo, "淡色地図": pale}).addTo(this.map);
+                std.addTo(this.map); L.control.layers({"標準地図": std, "写真�E�オルソ�E�E: photo, "淡色地図": pale}).addTo(this.map);
                 this.mapLayerGroup = L.featureGroup().addTo(this.map);
                 this.tempLineLayer = L.polyline([], { color: '#059669', weight: 2, dashArray: '6, 6', interactive: false }).addTo(this.map);
 
@@ -1880,11 +1880,11 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
             toggleMapMode() {
                 this.isMapMode = !this.isMapMode;
                 if (this.isMapMode) {
-                    this.els.mapContainer.style.display = 'block'; this.els.btnToggleMap.textContent = '✏️ 図面ビュー'; this.els.btnToggleMap.classList.add('active-map');
+                    this.els.mapContainer.style.display = 'block'; this.els.btnToggleMap.textContent = '✏︁E図面ビュー'; this.els.btnToggleMap.classList.add('active-map');
                     if (!this.map) this.initMap(); this.map.dragging.enable();
                     setTimeout(() => { this.map.invalidateSize(); this.updateMapDrawing(true); this._updateMapTempLine(); }, 100);
                 } else {
-                    this.els.mapContainer.style.display = 'none'; this.els.btnToggleMap.textContent = '🗺️ 地図ビュー'; this.els.btnToggleMap.classList.remove('active-map');
+                    this.els.mapContainer.style.display = 'none'; this.els.btnToggleMap.textContent = '🗺�E�E地図ビュー'; this.els.btnToggleMap.classList.remove('active-map');
                     this.resizeCanvas(); this.updateDrawing(true);
                 }
             }
@@ -1986,10 +1986,10 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                     polyline.on('mousedown', (e) => {
                         if (this.state.interactionMode === 'select') {
                             L.DomEvent.stopPropagation(e);
-                            L.DomEvent.preventDefault(e.originalEvent); // ネイティブドラッグを防止
+                            L.DomEvent.preventDefault(e.originalEvent); // ネイチE��ブドラチE��を防止
                             this.map.dragging.disable();
                             
-                            document.body.classList.add('left-dragging'); // クリックした瞬間にグーにする
+                            document.body.classList.add('left-dragging'); // クリチE��した瞬間にグーにする
 
                             this._selectAnnotation({ type: 'line', index: i, ref: line });
                             this.state.view.isMovingAnnotation = true;
@@ -2095,10 +2095,10 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                     marker.on('mousedown', (e) => {
                         if (this.state.interactionMode === 'select') {
                             L.DomEvent.stopPropagation(e);
-                            L.DomEvent.preventDefault(e.originalEvent); // ネイティブドラッグを防止
+                            L.DomEvent.preventDefault(e.originalEvent); // ネイチE��ブドラチE��を防止
                             this.map.dragging.disable();
 
-                            document.body.classList.add('left-dragging'); // クリックした瞬間にグーにする
+                            document.body.classList.add('left-dragging'); // クリチE��した瞬間にグーにする
 
                             this._selectAnnotation({ type: 'text', index: i, ref: t });
                             this.state.view.isMovingAnnotation = true;
@@ -2175,32 +2175,32 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
             // ------------------------------------------
             exportGeoJSON(fileName) {
                 const lat0 = parseFloat(this.els.inputLat.value), lon0 = parseFloat(this.els.inputLon.value);
-                if (isNaN(lat0) || isNaN(lon0)) return this.showToast("基準点(B.P.)の緯度・経度を正しく入力してください。");
+                if (isNaN(lat0) || isNaN(lon0)) return this.showToast("基準点(B.P.)の緯度・経度を正しく入力してください、E);
                 const lonDPM = CONSTANTS.LAT_DEG_PER_METER / Math.cos(Utils.deg2rad(lat0)), features = [], customProps = {};
                 this.state.attributes.forEach(a => { if (a.name) customProps[a.name] = a.value; });
                 const fp = this._getFirstPointName();
                 
-                features.push({ type: "Feature", properties: { "測点名": fp, "緯度": parseFloat(lat0.toFixed(6)), "経度": parseFloat(lon0.toFixed(6)), ...customProps }, geometry: { type: "Point", coordinates: [lon0, lat0] } });
+                features.push({ type: "Feature", properties: { "測点吁E: fp, "緯度": parseFloat(lat0.toFixed(6)), "経度": parseFloat(lon0.toFixed(6)), ...customProps }, geometry: { type: "Point", coordinates: [lon0, lat0] } });
                 this.state.nodes.forEach((node, name) => {
                     if (name === fp && Math.abs(node.x) < 0.001 && Math.abs(node.y) < 0.001) return;
-                    features.push({ type: "Feature", properties: { "測点名": name, "緯度": parseFloat((lat0 + node.y * CONSTANTS.LAT_DEG_PER_METER).toFixed(6)), "経度": parseFloat((lon0 + node.x * lonDPM).toFixed(6)), ...customProps }, geometry: { type: "Point", coordinates: [lon0 + node.x * lonDPM, lat0 + node.y * CONSTANTS.LAT_DEG_PER_METER] } });
+                    features.push({ type: "Feature", properties: { "測点吁E: name, "緯度": parseFloat((lat0 + node.y * CONSTANTS.LAT_DEG_PER_METER).toFixed(6)), "経度": parseFloat((lon0 + node.x * lonDPM).toFixed(6)), ...customProps }, geometry: { type: "Point", coordinates: [lon0 + node.x * lonDPM, lat0 + node.y * CONSTANTS.LAT_DEG_PER_METER] } });
                 });
 
                 if (this.els.chkCompassAdjustment.checked) {
                     this.state.detectedAreas.forEach(p => {
                         const coords = [p.coords]; p.holes.forEach(h => coords.push(h.coords));
-                        features.push({ type: "Feature", properties: { name: p.originalName, "全体面積(m2)": parseFloat(p.area.toFixed(2)), "除地面積(m2)": parseFloat((p.area - p.netArea).toFixed(2)), "正味面積(m2)": parseFloat(p.netArea.toFixed(2)), "全体面積(ha)": parseFloat(Utils.round4(p.area / 10000)), "除地面積(ha)": parseFloat(Utils.round4((p.area - p.netArea) / 10000)), "正味面積(ha)": parseFloat(Utils.round4(p.netArea / 10000)), "周長(m)": parseFloat(p.perimeter.toFixed(2)), "構造": p.isDonut ? `ドーナツポリゴン（${p.holes.length}つの穴）` : "通常ポリゴン", ...customProps }, geometry: { type: "Polygon", coordinates: coords } });
+                        features.push({ type: "Feature", properties: { name: p.originalName, "全体面穁Em2)": parseFloat(p.area.toFixed(2)), "除地面穁Em2)": parseFloat((p.area - p.netArea).toFixed(2)), "正味面穁Em2)": parseFloat(p.netArea.toFixed(2)), "全体面穁Eha)": parseFloat(Utils.round4(p.area / 10000)), "除地面穁Eha)": parseFloat(Utils.round4((p.area - p.netArea) / 10000)), "正味面穁Eha)": parseFloat(Utils.round4(p.netArea / 10000)), "周長(m)": parseFloat(p.perimeter.toFixed(2)), "構造": p.isDonut ? `ド�Eナツポリゴン�E�E{p.holes.length}つの穴�E�` : "通常ポリゴン", ...customProps }, geometry: { type: "Polygon", coordinates: coords } });
                     });
                 }
                 this.state.points.forEach(p => {
-                    features.push({ type: "Feature", properties: { "タイプ": p.type === 'main' ? '本線' : '支線', "作図対象": p.isDraw ? 'はい' : 'いいえ', "器械点": p.fromName, "視準点": p.toName, "方位角": parseFloat(p.input.az.toFixed(2)), "高低角": p.input.el, "斜距離": p.input.sd, "水平距離": parseFloat(p.input.hd.toFixed(2)), ...customProps }, geometry: { type: "LineString", coordinates: [[lon0 + p.fromX * lonDPM, lat0 + p.fromY * CONSTANTS.LAT_DEG_PER_METER], [lon0 + p.toX * lonDPM, lat0 + p.toY * CONSTANTS.LAT_DEG_PER_METER]] } });
+                    features.push({ type: "Feature", properties: { "タイチE: p.type === 'main' ? '本緁E : '支緁E, "作図対象": p.isDraw ? 'はぁE : 'ぁE��ぁE, "器械点": p.fromName, "視準点": p.toName, "方位见E: parseFloat(p.input.az.toFixed(2)), "高低见E: p.input.el, "斜距離": p.input.sd, "水平距離": parseFloat(p.input.hd.toFixed(2)), ...customProps }, geometry: { type: "LineString", coordinates: [[lon0 + p.fromX * lonDPM, lat0 + p.fromY * CONSTANTS.LAT_DEG_PER_METER], [lon0 + p.toX * lonDPM, lat0 + p.toY * CONSTANTS.LAT_DEG_PER_METER]] } });
                 });
                 if (this.state.annotations) {
-                    this.state.annotations.texts.forEach(t => features.push({ type: "Feature", properties: { "タイプ": "注記", "テキスト": t.text, "文字色": t.color || '#059669', "サイズ": t.fontSize || 14, "回転角度": parseFloat(((t.rotation || 0) * 180 / Math.PI).toFixed(2)), ...customProps }, geometry: { type: "Point", coordinates: [lon0 + t.x * lonDPM, lat0 + t.y * CONSTANTS.LAT_DEG_PER_METER] } }));
-                    this.state.annotations.lines.forEach(l => features.push({ type: "Feature", properties: { "タイプ": "連続線", "回転角度": parseFloat(((l.rotation || 0) * 180 / Math.PI).toFixed(2)), ...customProps }, geometry: { type: "LineString", coordinates: l.points.map(pt => [lon0 + pt.x * lonDPM, lat0 + pt.y * CONSTANTS.LAT_DEG_PER_METER]) } }));
+                    this.state.annotations.texts.forEach(t => features.push({ type: "Feature", properties: { "タイチE: "注訁E, "チE��スチE: t.text, "斁E��色": t.color || '#059669', "サイズ": t.fontSize || 14, "回転角度": parseFloat(((t.rotation || 0) * 180 / Math.PI).toFixed(2)), ...customProps }, geometry: { type: "Point", coordinates: [lon0 + t.x * lonDPM, lat0 + t.y * CONSTANTS.LAT_DEG_PER_METER] } }));
+                    this.state.annotations.lines.forEach(l => features.push({ type: "Feature", properties: { "タイチE: "連続緁E, "回転角度": parseFloat(((l.rotation || 0) * 180 / Math.PI).toFixed(2)), ...customProps }, geometry: { type: "LineString", coordinates: l.points.map(pt => [lon0 + pt.x * lonDPM, lat0 + pt.y * CONSTANTS.LAT_DEG_PER_METER]) } }));
                 }
 
-                if (!fileName) fileName = '令和8年度_育成複層林整備_山田太郎_No.10';
+                if (!fileName) fileName = '令咁E年度_育成褁E��林整備_山田太郎_No.10';
                 if (!fileName.endsWith('.geojson')) fileName += '.geojson';
                 this._downloadFile("data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ type: "FeatureCollection", features }, null, 2)), fileName);
             }
@@ -2224,13 +2224,13 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
                     });
                 }
                 
-                // SVG（背景となる線や面、ドットのみ出力する）と、ドラッグ可能なテキスト群（HTML）を生成
+                // SVG�E�背景となる線や面、ドチE��のみ出力する）と、ドラチE��可能なチE��スト群�E�ETML�E�を生�E
                 const expRes = this._generateExportSVGDataURL(conf, expScale, expOffsetX, expOffsetY);
                 const compSVG = this._generateCompassSVGDataURL(conf, dec);
                 const labelsHTML = this._generateDraggableLabelsHTML(expScale, expOffsetX, expOffsetY, expRes.pxPerMm, expRes.x, expRes.y);
                 
-                // 地図ビュー用の緯度経度境界を計算
-                // 地図ビュー用の緯度経度境界を計算 (printMapBg が用紙全体と同じサイズになるため)
+                // 地図ビュー用の緯度経度墁E��を計箁E
+                // 地図ビュー用の緯度経度墁E��を計箁E(printMapBg が用紙�E体と同じサイズになるためE
                 const ixLeft = -expOffsetX / expScale;
                 const iyTop = expOffsetY / expScale;
                 const ixRight = (conf.expW - expOffsetX) / expScale;
@@ -2279,13 +2279,13 @@ table { border-collapse: collapse; border: 1px solid #000; } th, td { border: 1p
 </style></head><body>
 <div class="instruction" id="toolbar">
     <div style="display: flex; align-items: center; gap: 15px;">
-        <span>💡 図面全体、または表、文字要素を個別にドラッグして自由に移動・調整できます。</span>
+        <span>💡 図面全体、また�E表、文字要素を個別にドラチE��して自由に移動�E調整できます、E/span>
         <div style="display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 6px;">
             <span style="font-size: 0.85rem;">表示倍率:</span>
-            <button class="btn-zoom" id="btnZoomOut" title="縮小">－</button>
+            <button class="btn-zoom" id="btnZoomOut" title="縮封E>�E�E/button>
             <span id="zoomLevel" style="font-size: 0.9rem; min-width: 45px; text-align: center; font-weight: bold;">100%</span>
-            <button class="btn-zoom" id="btnZoomIn" title="拡大">＋</button>
-            <button class="btn-zoom" id="btnFitScreen" title="画面に合わせる" style="width: auto; padding: 0 8px; font-size: 0.8rem; margin-left: 4px;">⛶ フィット</button>
+            <button class="btn-zoom" id="btnZoomIn" title="拡大">�E�E/button>
+            <button class="btn-zoom" id="btnFitScreen" title="画面に合わせる" style="width: auto; padding: 0 8px; font-size: 0.8rem; margin-left: 4px;">⛶ フィチE��</button>
             <label style="font-size:13px; margin-left: 10px; cursor: pointer; color: white;"><input type="checkbox" id="chkBgMap" ${showMapBg ? 'checked' : ''}> 背景地図</label>
             <select id="bgMapType" style="margin-left:5px; font-size:13px; padding: 2px;">
                 <option value="https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png" ${currentTileUrl.includes('std') ? 'selected' : ''}>標準地図</option>
@@ -2295,7 +2295,7 @@ table { border-collapse: collapse; border: 1px solid #000; } th, td { border: 1p
         </div>
         
         <div style="display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 6px;">
-            <span style="font-size: 0.85rem;">用紙:</span>
+            <span style="font-size: 0.85rem;">用紁E</span>
             <select id="plPaperSize" style="font-size:12px; padding:2px;">
                 <option value="A4" ${pSize==='A4'?'selected':''}>A4</option>
                 <option value="A3" ${pSize==='A3'?'selected':''}>A3</option>
@@ -2320,13 +2320,14 @@ table { border-collapse: collapse; border: 1px solid #000; } th, td { border: 1p
                 <option value="2500" ${sOpt==='2500'?'selected':''}>1/2,500</option>
                 <option value="5000" ${sOpt==='5000'?'selected':''}>1/5,000</option>
             </select>
-            <span style="font-size: 0.85rem; margin-left: 6px;">成果表折返:</span>
+            <span style="font-size: 0.85rem; margin-left: 6px;">成果表折迁E</span>
             <input type="number" id="plTableSplit" value="${split}" style="width:45px; font-size:12px; padding:2px;">
         </div>
     </div>
     <div>
-        <button class="btn" onclick="window.print()">🖨️ 印刷</button>
-        <button class="btn btn-save" id="btnSaveHTML">💾 HTML保存</button>
+        <button class="btn" onclick="window.print()">🖨�E�E印刷</button>
+        <button class="btn" id="btnSaveDXF" style="background: #c2410c;">💾 DXF保孁E/button>
+        <button class="btn btn-save" id="btnSaveHTML">💾 HTML保孁E/button>
     </div>
 </div>
 <div class="page-wrapper">
@@ -2342,7 +2343,7 @@ table { border-collapse: collapse; border: 1px solid #000; } th, td { border: 1p
         </div>
         <img src="${compSVG}" class="compass-image draggable no-scale no-bg" draggable="false">
         <div class="attr-table-wrapper draggable"><table>${attrTable}</table></div>${resTable}${areaTable}
-        ${this.els.closureInfo.innerText ? `<div class="closure-info draggable" style="bottom:15mm; left:15mm; padding:5px; font-size:9pt;">閉合状況: ${this.els.closureInfo.innerText}</div>` : ''}
+        ${this.els.closureInfo.innerText ? `<div class="closure-info draggable" style="bottom:15mm; left:15mm; padding:5px; font-size:9pt;">閉合状況E ${this.els.closureInfo.innerText}</div>` : ''}
     </div>
 </div>
 <script>
@@ -2443,7 +2444,7 @@ window.addEventListener('load', () => {
     };
     document.onmouseup = () => active = null;
     
-    // --- 用紙ズーム・自動フィット機能 ---
+    // --- 用紙ズーム・自動フィチE��機�E ---
     window.pageScale = 1.0;
     let isAutoFit = true;
     const pageContainer = document.querySelector('.page-container');
@@ -2534,7 +2535,7 @@ window.addEventListener('load', () => {
 
     fitToScreen();
 
-    // --- HTML保存機能 ---
+    // --- HTML保存機�E ---
     document.getElementById('btnSaveHTML').addEventListener('click', () => {
         const currentScale = window.pageScale;
         const currentAutoFit = isAutoFit;
@@ -2649,7 +2650,7 @@ window.addEventListener('load', () => {
             const newSplit = parseInt(document.getElementById('plTableSplit').value, 10) || 50;
             window.opener.app.showHTMLPreview(${JSON.stringify(fileName)}, newPSize, newOri, newSOpt, newSplit, window);
         } else {
-            alert('元の画面が閉じられているか、アクセスできないため設定を反映できません。');
+            alert('允E�E画面が閉じられてぁE��か、アクセスできなぁE��め設定を反映できません、E);
         }
     }
     
@@ -2680,16 +2681,16 @@ window.addEventListener('load', () => {
                     const hd = pt ? pt.input.hd : 0; tHD += hd; tSD += parseFloat(r[4]||0);
                     curHtml += `<tr><td style="text-align:center;">${r[0]} - ${r[1]}</td><td style="text-align:right;">${r[2]}</td><td style="text-align:right;">${r[3]}</td><td style="text-align:right;">${(parseFloat(r[4]||0)).toFixed(2)}</td><td style="text-align:right;">${hd ? hd.toFixed(2) : ''}</td></tr>`;
                     if ((splitRows > 0 && (i + 1) % splitRows === 0) || i === data.length - 1) {
-                        if (i === data.length - 1) curHtml += `<tr style="border-top:2px solid #000;"><td colspan="3" style="text-align:center;">合 計</td><td style="text-align:right;">${tSD.toFixed(2)}</td><td style="text-align:right;">${tHD.toFixed(2)}</td></tr>`;
-                        html += `<table style="width:85mm; font-size:8pt; border-collapse:collapse; margin-left:10px;"><thead><tr><th>測 点</th><th>方位角</th><th>高低角</th><th>斜距離</th><th>水平距離</th></tr></thead><tbody>${curHtml}</tbody></table>`; curHtml = '';
+                        if (i === data.length - 1) curHtml += `<tr style="border-top:2px solid #000;"><td colspan="3" style="text-align:center;">吁E訁E/td><td style="text-align:right;">${tSD.toFixed(2)}</td><td style="text-align:right;">${tHD.toFixed(2)}</td></tr>`;
+                        html += `<table style="width:85mm; font-size:8pt; border-collapse:collapse; margin-left:10px;"><thead><tr><th>測 点</th><th>方位见E/th><th>高低见E/th><th>斜距離</th><th>水平距離</th></tr></thead><tbody>${curHtml}</tbody></table>`; curHtml = '';
                     }
                 });
-                return `<div class="result-table-wrapper draggable"><div style="font-weight:bold;text-align:center;border-bottom:1px solid #000;margin-bottom:5px;">成 果 表</div><div style="display:flex; justify-content:flex-end;">${html}</div></div>`;
+                return `<div class="result-table-wrapper draggable"><div style="font-weight:bold;text-align:center;border-bottom:1px solid #000;margin-bottom:5px;">戁E极E表</div><div style="display:flex; justify-content:flex-end;">${html}</div></div>`;
             }
 
             _buildExportHTMLAttrTable(scTxt, lat, lon, dec) {
                 let html = this.state.attributes.map(a => `<tr><th style="text-align:left;white-space:nowrap;">${a.name}</th><td>${a.value||''}</td></tr>`).join('');
-                return html + `<tr><th style="text-align:left;">縮尺</th><td style="font-weight:bold;">${scTxt}</td></tr><tr><th style="text-align:left;">基準点</th><td style="font-size:8pt;">Lat ${lat} / Lon ${lon} <br>(偏角: ${dec}度)</td></tr>`;
+                return html + `<tr><th style="text-align:left;">縮尺</th><td style="font-weight:bold;">${scTxt}</td></tr><tr><th style="text-align:left;">基準点</th><td style="font-size:8pt;">Lat ${lat} / Lon ${lon} <br>(偏见E ${dec}度)</td></tr>`;
             }
 
             _buildExportHTMLAreaTable() {
@@ -2700,17 +2701,17 @@ window.addEventListener('load', () => {
                     tArea += parseFloat(netHa);
                     if (a.isDonut) {
                         const totalHa = Utils.round4(a.area / 10000);
-                        html += `<tr><td style="border-bottom-style: dashed; border-bottom-color: #999;">区画 ${i + 1} (全体)</td><td style="text-align:right; border-bottom-style: dashed; border-bottom-color: #999;">${totalHa} ha</td></tr>`;
+                        html += `<tr><td style="border-bottom-style: dashed; border-bottom-color: #999;">区画 ${i + 1} (全佁E</td><td style="text-align:right; border-bottom-style: dashed; border-bottom-color: #999;">${totalHa} ha</td></tr>`;
                         a.holes.forEach(h => {
                             const hHa = Utils.round4(h.area / 10000);
-                            html += `<tr><td style="border-bottom-style: dashed; border-bottom-color: #999; color: #A13D44; padding-left: 12px;">－ 除地 ${h.globalIndex || ''}</td><td style="text-align:right; border-bottom-style: dashed; border-bottom-color: #999; color: #A13D44;">${hHa} ha</td></tr>`;
+                            html += `<tr><td style="border-bottom-style: dashed; border-bottom-color: #999; color: #A13D44; padding-left: 12px;">�E�E除地 ${h.globalIndex || ''}</td><td style="text-align:right; border-bottom-style: dashed; border-bottom-color: #999; color: #A13D44;">${hHa} ha</td></tr>`;
                         });
-                        html += `<tr><td>区画 ${i + 1} 小計</td><td style="text-align:right; font-weight: bold;">${netHa} ha</td></tr>`;
+                        html += `<tr><td>区画 ${i + 1} 小訁E/td><td style="text-align:right; font-weight: bold;">${netHa} ha</td></tr>`;
                     } else {
                         html += `<tr><td>区画 ${i + 1}</td><td style="text-align:right;">${netHa} ha</td></tr>`;
                     }
                 });
-                return `<div class="area-table-wrapper draggable"><div style="font-weight:bold;text-align:center;border-bottom:1px solid #000;margin-bottom:5px;">面 積 表</div><table style="width:100%;font-size:9pt;">${html}<tr style="border-top:2px solid #000;font-weight:bold;"><td>合 計</td><td style="text-align:right;">${Utils.round4(tArea)} ha</td></tr></table></div>`;
+                return `<div class="area-table-wrapper draggable"><div style="font-weight:bold;text-align:center;border-bottom:1px solid #000;margin-bottom:5px;">面 穁E表</div><table style="width:100%;font-size:9pt;">${html}<tr style="border-top:2px solid #000;font-weight:bold;"><td>吁E訁E/td><td style="text-align:right;">${Utils.round4(tArea)} ha</td></tr></table></div>`;
             }
 
             _calcExportScaleOptions(conf, scaleOption) {
@@ -2763,11 +2764,11 @@ window.addEventListener('load', () => {
             _generateDraggableLabelsHTML(scale, ox, oy, pxPerMm, tx, ty) {
                 let html = '';
                 
-                // 親コンテナ（map-group）の起点オフセット(mm)
+                // 親コンチE���E�Eap-group�E��E起点オフセチE��(mm)
                 const offsetMmX = tx / pxPerMm;
                 const offsetMmY = ty / pxPerMm;
                 
-                // 1. 測点名
+                // 1. 測点吁E
                 const fp = this._getFirstPointName();
                 let nIdx = 1, intv = parseInt(this.els.selNodeLabelInterval.value, 10);
                 const addNodeLabel = (x, y, name, show) => {
@@ -2800,7 +2801,7 @@ window.addEventListener('load', () => {
                     }
                 });
 
-                // 3. テキスト注記
+                // 3. チE��スト注訁E
                 (this.state.annotations?.texts||[]).forEach((t, i) => {
                     const fs = t.fontSize || 14;
                     const w = Utils.estimateTextWidth(t.text, fs);
@@ -2823,9 +2824,9 @@ window.addEventListener('load', () => {
 
             exportJSON(fileName) {
                 const st = { tableData: this.state.tableData, attributes: this.state.attributes, annotations: this.state.annotations, settings: { lat: this.els.inputLat.value, lon: this.els.inputLon.value, declination: this.els.inputDeclination.value, magDeclinationChecked: this.els.chkMagDeclination.checked, compassAdjustmentChecked: this.els.chkCompassAdjustment.checked, convertEPtoBPChecked: this.els.chkConvertEPtoBP ? this.els.chkConvertEPtoBP.checked : true, nodeLabelInterval: this.els.selNodeLabelInterval.value }, previewImage: this.generatePreviewImage() };
-                if (!fileName) fileName = '令和8年度_育成複層林整備_山田太郎_No.10'; if (!fileName.endsWith('.json')) fileName += '.json';
+                if (!fileName) fileName = '令咁E年度_育成褁E��林整備_山田太郎_No.10'; if (!fileName.endsWith('.json')) fileName += '.json';
                 this._downloadFile("data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(st)), fileName);
-                this.showToast('JSONファイルとして保存しました。');
+                this.showToast('JSONファイルとして保存しました、E);
             }
 
             generatePreviewImage() {
@@ -2871,7 +2872,7 @@ window.addEventListener('load', () => {
             }
 
             async processJsonFiles(jsonFiles) {
-                if (jsonFiles.length === 0) { this.showToast('JSONファイルが見つかりませんでした。'); if (this.els.inputFileJSON) this.els.inputFileJSON.value = ''; return; }
+                if (jsonFiles.length === 0) { this.showToast('JSONファイルが見つかりませんでした、E); if (this.els.inputFileJSON) this.els.inputFileJSON.value = ''; return; }
                 this.importFilesList = []; this.selectedImportIndex = -1; this.els.importFileList.innerHTML = '';
                 this.els.importPreviewImage.style.display = 'none'; this.els.importNoPreviewText.style.display = 'inline-block';
                 this.els.importPreviewInfo.innerHTML = ''; this.els.btnApplyImport.disabled = true;
@@ -2884,7 +2885,7 @@ window.addEventListener('load', () => {
                 })));
 
                 this.importFilesList = results.filter(i => i !== null).sort((a, b) => a.name.localeCompare(b.name));
-                if (this.importFilesList.length === 0) { this.els.importNoPreviewText.textContent = '有効なデータが見つかりませんでした。'; return; }
+                if (this.importFilesList.length === 0) { this.els.importNoPreviewText.textContent = '有効なチE�Eタが見つかりませんでした、E; return; }
                 this.renderImportFileList(); this.selectImportFile(0);
             }
 
@@ -2904,10 +2905,10 @@ window.addEventListener('load', () => {
                 const item = this.importFilesList[index]; if (!item) return;
                 
                 if (item.data.previewImage) { this.els.importPreviewImage.src = item.data.previewImage; this.els.importPreviewImage.style.display = 'inline-block'; this.els.importNoPreviewText.style.display = 'none'; } 
-                else { this.els.importPreviewImage.style.display = 'none'; this.els.importNoPreviewText.style.display = 'inline-block'; this.els.importNoPreviewText.textContent = 'プレビュー画像なし'; }
+                else { this.els.importPreviewImage.style.display = 'none'; this.els.importNoPreviewText.style.display = 'inline-block'; this.els.importNoPreviewText.textContent = 'プレビュー画像なぁE; }
 
                 let attrText = item.data.attributes ? item.data.attributes.filter(a=>a.value).map(a=>a.value).join(' / ') : '';
-                this.els.importPreviewInfo.innerHTML = `<strong>ファイル名:</strong> ${item.name}<br>` + (item.data.tableData ? `<strong>データ数:</strong> ${item.data.tableData.length}行<br>` : '') + (attrText ? `<strong>属性情報:</strong> <span style="color:#4b5563;">${attrText}</span>` : '');
+                this.els.importPreviewInfo.innerHTML = `<strong>ファイル吁E</strong> ${item.name}<br>` + (item.data.tableData ? `<strong>チE�Eタ数:</strong> ${item.data.tableData.length}衁Ebr>` : '') + (attrText ? `<strong>属性惁E��:</strong> <span style="color:#4b5563;">${attrText}</span>` : '');
                 this.els.btnApplyImport.disabled = false;
             }
 
@@ -2923,7 +2924,8 @@ window.addEventListener('load', () => {
                 }
                 this.renderAttrTable(); this.renderTable();
                 setTimeout(() => { this.resizeCanvas(); this.updateDrawing(true); if (this.isMapMode && this.map) { this.map.invalidateSize(); this.updateMapDrawing(true); } }, 100);
-                this.pushState(); this.showToast('データを読み込みました。');
+                this.pushState(); this.showToast('チE�Eタを読み込みました、E);
             }
         }
         window.onload = () => { window.app = new CompassSurveyApp(); };
+
