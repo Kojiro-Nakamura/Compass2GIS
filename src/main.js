@@ -2348,7 +2348,8 @@ table { border-collapse: collapse; border: 1px solid #000; } th, td { border: 1p
     </div>
 </div>
 <script>
-setTimeout(() => {
+window.onerror = function(m, u, l) { alert('Error: ' + m + '\\nLine: ' + l); };
+setTimeout(() => { try {
     document.querySelectorAll('.result-table-wrapper, .area-table-wrapper, .attr-table-wrapper').forEach(w => {
         const p = w.parentElement, s = Math.min((p.clientHeight*0.85)/w.offsetHeight, (p.clientWidth*0.85)/w.offsetWidth);
         if (s < 1) { w.style.transform = \`scale(\${s})\`; w.dataset.scale = s; }
@@ -2880,6 +2881,7 @@ setTimeout(() => {
         a.click();
         URL.revokeObjectURL(url);
     });
+    } catch(e) { alert('Try Error: ' + e.message); }
 }, 100);
 <\/script></body></html>`;
 
