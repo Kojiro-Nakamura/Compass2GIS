@@ -2880,7 +2880,7 @@ setTimeout(() => {
         a.click();
         URL.revokeObjectURL(url);
     });
-})();
+}, 100);
 <\/script></body></html>`;
 
                 const blob = new Blob([htmlContent], { type: 'text/html' });
