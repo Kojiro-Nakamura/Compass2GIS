@@ -12,6 +12,9 @@
     "vite": "^5.0.0"
   },
   "dependencies": {
-    "leaflet": "^1.9.4"
+    "iconv-lite": "^0.7.3",
+    "jsdom": "^29.1.1",
+    "leaflet": "^1.9.4",
+    "puppeteer-core": "^25.3.0"
   }
 }

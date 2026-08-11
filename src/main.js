@@ -2348,7 +2348,7 @@ table { border-collapse: collapse; border: 1px solid #000; } th, td { border: 1p
     </div>
 </div>
 <script>
-window.addEventListener('load', () => {
+(() => {
     document.querySelectorAll('.result-table-wrapper, .area-table-wrapper, .attr-table-wrapper').forEach(w => {
         const p = w.parentElement, s = Math.min((p.clientHeight*0.85)/w.offsetHeight, (p.clientWidth*0.85)/w.offsetWidth);
         if (s < 1) { w.style.transform = \`scale(\${s})\`; w.dataset.scale = s; }
@@ -2664,7 +2664,7 @@ window.addEventListener('load', () => {
 
     class SimpleDxfWriter {
         constructor(w = 297, h = 210) {
-            this.header = ['0', 'SECTION', '2', 'HEADER', '9', '$ACADVER', '1', 'AC1015', '9', '$DWGCODEPAGE', '3', 'ANSI_932', '9', '$LIMMIN', '10', '0.0', '20', '0.0', '9', '$LIMMAX', '10', w.toFixed(2), '20', h.toFixed(2), '9', '$EXTMIN', '10', '0.0', '20', '0.0', '9', '$EXTMAX', '10', w.toFixed(2), '20', h.toFixed(2), '0', 'ENDSEC'];
+            this.header = ['0', 'SECTION', '2', 'HEADER', '9', '$ACADVER', '1', 'AC1009', '9', '$DWGCODEPAGE', '3', 'ANSI_932', '9', '$LIMMIN', '10', '0.0', '20', '0.0', '9', '$LIMMAX', '10', w.toFixed(2), '20', h.toFixed(2), '9', '$EXTMIN', '10', '0.0', '20', '0.0', '9', '$EXTMAX', '10', w.toFixed(2), '20', h.toFixed(2), '0', 'ENDSEC'];
             this.blocks = ['0', 'SECTION', '2', 'BLOCKS'];
             this.entities = ['0', 'SECTION', '2', 'ENTITIES'];
             this.currentSection = this.entities;
@@ -2732,12 +2732,15 @@ window.addEventListener('load', () => {
         dxf.addLine(0, paperH_mm, 0, 0, 7);
 
         const drawTextEl = (el, draggable) => {
-            if (!el || el.innerText.trim() === '') return;
+            if (!el) return;
+            const textContent = (el.innerHTML || el.textContent || '').trim();
+            if (textContent === '') return;
             const rect = el.getBoundingClientRect();
             if (rect.width === 0 || rect.height === 0) return;
             
             const style = window.getComputedStyle(el);
-            const text = el.innerText;
+            let text = textContent.replace(/<br\s*\/?>/gi, String.fromCharCode(10)).replace(/<[^>]+>/g, "");
+            text = text.replace(/&nbsp;/g, " ").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
             const scale = draggable ? parseFloat(draggable.getAttribute('data-scale')) || 1 : 1;
             const fontSizePx = parseFloat(style.fontSize) || 12;
             const hMm = (fontSizePx * scale) * pxToMm;
@@ -2753,8 +2756,18 @@ window.addEventListener('load', () => {
                 alignCode = 'R';
             }
             
+            let rot = 0;
+            if (el.style.transform && el.style.transform.includes('rotate')) {
+                const m = el.style.transform.match(/rotate\\(([-.\\d]+)/);
+                if (m) rot = parseFloat(m[1]) || 0;
+            }
+            
             let py = unscale(rect.bottom - paperRect.top) - (fontSizePx * scale * 0.2); 
-            dxf.addText(text.split(String.fromCharCode(10)).join(' '), toDxfX(px), toDxfY(py), hMm, 7, alignCode);
+            const lines = text.split(String.fromCharCode(10));
+            lines.forEach((line, idx) => {
+                let yOffset = py + idx * fontSizePx * scale * 0.35;
+                dxf.addText(line.trim(), toDxfX(px), toDxfY(yOffset), hMm, 7, alignCode, rot);
+            });
         };
 
         const svgs = document.querySelectorAll('svg');
@@ -2867,8 +2880,7 @@ window.addEventListener('load', () => {
         a.click();
         URL.revokeObjectURL(url);
     });
-
-});
+})();
 <\/script></body></html>`;
 
                 const blob = new Blob([htmlContent], { type: 'text/html' });
@@ -2898,7 +2910,7 @@ window.addEventListener('load', () => {
 
             _buildExportHTMLAttrTable(scTxt, lat, lon, dec) {
                 let html = this.state.attributes.map(a => `<tr><th style="text-align:left;white-space:nowrap;">${a.name}</th><td>${a.value||''}</td></tr>`).join('');
-                return html + `<tr><th style="text-align:left;">縮尺</th><td style="font-weight:bold;">${scTxt}</td></tr><tr><th style="text-align:left;">基準点</th><td style="font-size:8pt;">Lat ${lat} / Lon ${lon} <br>(偏角: ${dec}度)</td></tr>`;
+                return html + `<tr><th style="text-align:left;">縮尺</th><td style="font-weight:bold;">${scTxt}</td></tr><tr><th style="text-align:left;">基準点</th><td style="font-size:8pt;">Lat ${lat}<br>Lon ${lon}<br>(偏角: ${dec}度)</td></tr>`;
             }
 
             _buildExportHTMLAreaTable() {
@@ -3025,9 +3037,9 @@ window.addEventListener('load', () => {
 
             _generateCompassSVGDataURL(conf, dec) {
                 const uS = Math.min(conf.expW, conf.expH) / 800, r = 35 * uS, s = r * 4, cx = s/2, cy = s/2;
-                let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${s} ${s}" width="${s}" height="${s}"><g transform="translate(${cx}, ${cy})"><line x1="0" y1="${-r}" x2="0" y2="${r}" stroke="#9ca3af" stroke-width="${1.5*uS}" /><line x1="${-r}" y1="0" x2="${r}" y2="0" stroke="#9ca3af" stroke-width="${1.5*uS}" /><polygon points="0,${-r-6*uS} ${5*uS},${-r+12*uS} ${-5*uS},${-r+12*uS}" fill="${this.CONFIG.colors.compassText}" /><text x="0" y="${-r-13*uS}" font-family="sans-serif" font-size="${Math.round(16*uS)}px" font-weight="bold" fill="${this.CONFIG.colors.compassText}" text-anchor="middle">N</text>`;
-                if (this.els.chkMagDeclination.checked && parseFloat(dec) !== 0) svg += `<g transform="rotate(${-parseFloat(dec)})"><line x1="0" y1="0" x2="0" y2="${-r}" stroke="${this.CONFIG.colors.compassArrow}" stroke-width="${2.5*uS}" /><polygon points="0,${-r-2*uS} ${4*uS},${-r+8*uS} ${-4*uS},${-r+8*uS}" fill="${this.CONFIG.colors.compassArrow}" /><text x="0" y="${-r-6*uS}" font-family="sans-serif" font-size="${Math.round(14*uS)}px" fill="${this.CONFIG.colors.compassArrow}" text-anchor="middle">MN</text></g>`;
-                return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg + `</g></svg>`)));
+                let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${s} ${s}" width="${s}" height="${s}"><line x1="${cx}" y1="${cy-r}" x2="${cx}" y2="${cy+r}" stroke="#9ca3af" stroke-width="${1.5*uS}" /><line x1="${cx-r}" y1="${cy}" x2="${cx+r}" y2="${cy}" stroke="#9ca3af" stroke-width="${1.5*uS}" /><polygon points="${cx},${cy-r-6*uS} ${cx+5*uS},${cy-r+12*uS} ${cx-5*uS},${cy-r+12*uS}" fill="${this.CONFIG.colors.compassText}" /><text x="${cx}" y="${cy-r-13*uS}" font-family="sans-serif" font-size="${Math.round(16*uS)}px" font-weight="bold" fill="${this.CONFIG.colors.compassText}" text-anchor="middle">N</text>`;
+                if (this.els.chkMagDeclination.checked && parseFloat(dec) !== 0) { const rad = -parseFloat(dec) * Math.PI / 180; const cos = Math.cos(rad), sin = Math.sin(rad); const rx = (px, py) => cx + px * cos - py * sin; const ry = (px, py) => cy + px * sin + py * cos; const l1x = rx(0, -r), l1y = ry(0, -r); const p1x = rx(0, -r-2*uS), p1y = ry(0, -r-2*uS); const p2x = rx(4*uS, -r+8*uS), p2y = ry(4*uS, -r+8*uS); const p3x = rx(-4*uS, -r+8*uS), p3y = ry(-4*uS, -r+8*uS); const tx = rx(0, -r-6*uS), ty = ry(0, -r-6*uS); svg += `<line x1="${cx}" y1="${cy}" x2="${l1x}" y2="${l1y}" stroke="${this.CONFIG.colors.compassArrow}" stroke-width="${2.5*uS}" /><polygon points="${p1x},${p1y} ${p2x},${p2y} ${p3x},${p3y}" fill="${this.CONFIG.colors.compassArrow}" /><text x="${tx}" y="${ty}" font-family="sans-serif" font-size="${Math.round(14*uS)}px" fill="${this.CONFIG.colors.compassArrow}" text-anchor="middle">MN</text>`; }
+                return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg + `</svg>`)));
             }
 
             exportJSON(fileName) {
