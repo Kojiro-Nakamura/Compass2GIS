@@ -568,7 +568,7 @@ setTimeout(() => { try {
     if (rect.width === 0 || rect.height === 0) return;
     
     const style = window.getComputedStyle(el);
-    let text = textContent.replace(/<br\s*\/?>/gi, String.fromCharCode(10)).replace(/<[^>]+>/g, "");
+    let text = textContent.replace(/<br\\s*\\/?>/gi, String.fromCharCode(10)).replace(/<[^>]+>/g, "");
     text = text.replace(/&nbsp;/g, " ").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
     const scale = draggable ? parseFloat(draggable.getAttribute('data-scale')) || 1 : 1;
     const fontSizePx = parseFloat(style.fontSize) || 12;
@@ -622,7 +622,7 @@ setTimeout(() => { try {
         dxf.addCircle(tx(cx), ty(cy), r * scaleX * pxToMm, 7);
     });
     svg.querySelectorAll('polygon').forEach(poly => {
-        const pts = poly.getAttribute('points').trim().split(/\s+/).map(p => {
+        const pts = poly.getAttribute('points').trim().split(/\\s+/).map(p => {
             const [x,y] = p.split(',').map(Number);
             return {x: tx(x), y: ty(y)};
         });
@@ -637,7 +637,7 @@ setTimeout(() => { try {
         let startX = 0, startY = 0;
         cmds.forEach(cmd => {
             const type = cmd[0];
-            const args = cmd.slice(1).trim().split(/[\s,]+/).map(Number);
+            const args = cmd.slice(1).trim().split(/[\\s,]+/).map(Number);
             if(type === 'M' || type === 'm') {
                 if(type==='M') { curX = args[0]; curY = args[1]; }
                 else { curX += args[0]; curY += args[1]; }
