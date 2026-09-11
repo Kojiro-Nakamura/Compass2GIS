@@ -605,109 +605,127 @@ setTimeout(() => { try {
         let yOffset = startY + (idx * lineHeightPx) + (fontSizePx * scale * 0.9);
         dxf.addText(line.trim(), toDxfX(px), toDxfY(yOffset), hMm, 7, alignCode, rot);
     });
+
+    if (el.tagName !== 'TD' && el.tagName !== 'TH' && parseFloat(style.borderTopWidth) > 0 && style.borderTopStyle !== 'none') {
+        const cx1 = toDxfX(unscale(rect.left - paperRect.left));
+        const cy1 = toDxfY(unscale(rect.top - paperRect.top));
+        const cx2 = toDxfX(unscale(rect.right - paperRect.left));
+        const cy2 = toDxfY(unscale(rect.bottom - paperRect.top));
+        dxf.addLine(cx1, cy2, cx2, cy2, 7);
+        dxf.addLine(cx2, cy1, cx2, cy2, 7);
+        dxf.addLine(cx2, cy1, cx1, cy1, 7);
+        dxf.addLine(cx1, cy2, cx1, cy1, 7);
+    }
         };
 
         const svgs = document.querySelectorAll('svg');
         svgs.forEach(svg => {
-    const svgRect = svg.getBoundingClientRect();
-    const svgLeft = unscale(svgRect.left - paperRect.left);
-    const svgTop = unscale(svgRect.top - paperRect.top);
-    const vBox = svg.viewBox.baseVal;
-    if(!vBox) return;
-    const scaleX = unscale(svgRect.width) / (vBox.width || 1);
-    const scaleY = unscale(svgRect.height) / (vBox.height || 1);
-    
-    const tx = (x) => toDxfX(svgLeft + (x - vBox.x) * scaleX);
-    const ty = (y) => toDxfY(svgTop + (y - vBox.y) * scaleY);
-    
-    svg.querySelectorAll('line').forEach(line => {
-        const x1 = parseFloat(line.getAttribute('x1')||0), y1 = parseFloat(line.getAttribute('y1')||0);
-        const x2 = parseFloat(line.getAttribute('x2')||0), y2 = parseFloat(line.getAttribute('y2')||0);
-        dxf.addLine(tx(x1), ty(y1), tx(x2), ty(y2), 7);
-    });
-    svg.querySelectorAll('circle').forEach(c => {
-        const cx = parseFloat(c.getAttribute('cx')||0), cy = parseFloat(c.getAttribute('cy')||0), r = parseFloat(c.getAttribute('r')||0);
-        dxf.addCircle(tx(cx), ty(cy), r * scaleX * pxToMm, 7);
-    });
-    svg.querySelectorAll('polygon').forEach(poly => {
-        const pts = poly.getAttribute('points').trim().split(/\\s+/).map(p => {
-            const [x,y] = p.split(',').map(Number);
-            return {x: tx(x), y: ty(y)};
+            dxf.startGroup();
+            const svgRect = svg.getBoundingClientRect();
+            const svgLeft = unscale(svgRect.left - paperRect.left);
+            const svgTop = unscale(svgRect.top - paperRect.top);
+            const vBox = svg.viewBox.baseVal;
+            if(!vBox) { dxf.endGroup(); return; }
+            const scaleX = unscale(svgRect.width) / (vBox.width || 1);
+            const scaleY = unscale(svgRect.height) / (vBox.height || 1);
+            
+            const tx = (x) => toDxfX(svgLeft + (x - vBox.x) * scaleX);
+            const ty = (y) => toDxfY(svgTop + (y - vBox.y) * scaleY);
+            
+            svg.querySelectorAll('line').forEach(line => {
+                const x1 = parseFloat(line.getAttribute('x1')||0), y1 = parseFloat(line.getAttribute('y1')||0);
+                const x2 = parseFloat(line.getAttribute('x2')||0), y2 = parseFloat(line.getAttribute('y2')||0);
+                dxf.addLine(tx(x1), ty(y1), tx(x2), ty(y2), 7);
+            });
+            svg.querySelectorAll('circle').forEach(c => {
+                const cx = parseFloat(c.getAttribute('cx')||0), cy = parseFloat(c.getAttribute('cy')||0), r = parseFloat(c.getAttribute('r')||0);
+                dxf.addCircle(tx(cx), ty(cy), r * scaleX * pxToMm, 7);
+            });
+            svg.querySelectorAll('polygon').forEach(poly => {
+                const pts = poly.getAttribute('points').trim().split(/\s+/).map(p => {
+                    const [x,y] = p.split(',').map(Number);
+                    return {x: tx(x), y: ty(y)};
+                });
+                dxf.addPolyline(pts, true, 7);
+            });
+            svg.querySelectorAll('path').forEach(path => {
+                const d = path.getAttribute('d');
+                if(!d) return;
+                const cmds = d.match(/[A-Za-z][^A-Za-z]*/g);
+                if(!cmds) return;
+                let curX = 0, curY = 0;
+                let startX = 0, startY = 0;
+                cmds.forEach(cmd => {
+                    const type = cmd[0];
+                    const args = cmd.slice(1).trim().split(/[\s,]+/).map(Number);
+                    if(type === 'M' || type === 'm') {
+                        if(type==='M') { curX = args[0]; curY = args[1]; }
+                        else { curX += args[0]; curY += args[1]; }
+                        startX = curX; startY = curY;
+                    } else if(type === 'L' || type === 'l') {
+                        let nx, ny;
+                        if(type==='L') { nx = args[0]; ny = args[1]; }
+                        else { nx = curX + args[0]; ny = curY + args[1]; }
+                        dxf.addLine(tx(curX), ty(curY), tx(nx), ty(ny), 7);
+                        curX = nx; curY = ny;
+                    } else if(type === 'Z' || type === 'z') {
+                        dxf.addLine(tx(curX), ty(curY), tx(startX), ty(startY), 7);
+                        curX = startX; curY = startY;
+                    }
+                });
+            });
+            svg.querySelectorAll('text').forEach(t => {
+                const x = parseFloat(t.getAttribute('x')||0), y = parseFloat(t.getAttribute('y')||0);
+                const fs = parseFloat(t.getAttribute('font-size')||12);
+                dxf.addText(t.textContent, tx(x), ty(y), (fs * scaleY) * pxToMm, 7, 'C');
+            });
+            dxf.endGroup();
         });
-        dxf.addPolyline(pts, true, 7);
-    });
-    svg.querySelectorAll('path').forEach(path => {
-        const d = path.getAttribute('d');
-        if(!d) return;
-        const cmds = d.match(/[A-Za-z][^A-Za-z]*/g);
-        if(!cmds) return;
-        let curX = 0, curY = 0;
-        let startX = 0, startY = 0;
-        cmds.forEach(cmd => {
-            const type = cmd[0];
-            const args = cmd.slice(1).trim().split(/[\\s,]+/).map(Number);
-            if(type === 'M' || type === 'm') {
-                if(type==='M') { curX = args[0]; curY = args[1]; }
-                else { curX += args[0]; curY += args[1]; }
-                startX = curX; startY = curY;
-            } else if(type === 'L' || type === 'l') {
-                let nx, ny;
-                if(type==='L') { nx = args[0]; ny = args[1]; }
-                else { nx = curX + args[0]; ny = curY + args[1]; }
-                dxf.addLine(tx(curX), ty(curY), tx(nx), ty(ny), 7);
-                curX = nx; curY = ny;
-            } else if(type === 'Z' || type === 'z') {
-                dxf.addLine(tx(curX), ty(curY), tx(startX), ty(startY), 7);
-                curX = startX; curY = startY;
-            }
-        });
-    });
-    svg.querySelectorAll('text').forEach(t => {
-        const x = parseFloat(t.getAttribute('x')||0), y = parseFloat(t.getAttribute('y')||0);
-        const fs = parseFloat(t.getAttribute('font-size')||12);
-        dxf.addText(t.textContent, tx(x), ty(y), (fs * scaleY) * pxToMm, 7, 'C');
-    });
+
+        document.querySelectorAll('.sub-draggable').forEach(sub => {
+            dxf.startGroup();
+            drawTextEl(sub, null);
+            dxf.endGroup();
         });
 
         const draggables = document.querySelectorAll('.draggable');
         draggables.forEach(draggable => {
-    dxf.startGroup();
-    
-    draggable.querySelectorAll('table').forEach(table => {
-        const tableRect = table.getBoundingClientRect();
-        const x1 = toDxfX(unscale(tableRect.left - paperRect.left));
-        const y1 = toDxfY(unscale(tableRect.top - paperRect.top));
-        const x2 = toDxfX(unscale(tableRect.right - paperRect.left));
-        const y2 = toDxfY(unscale(tableRect.bottom - paperRect.top));
-        dxf.addLine(x1, y1, x2, y1, 7);
-        dxf.addLine(x2, y1, x2, y2, 7);
-        dxf.addLine(x2, y2, x1, y2, 7);
-        dxf.addLine(x1, y2, x1, y1, 7);
+            dxf.startGroup();
+            
+            draggable.querySelectorAll('table').forEach(table => {
+                const tableRect = table.getBoundingClientRect();
+                const x1 = toDxfX(unscale(tableRect.left - paperRect.left));
+                const y1 = toDxfY(unscale(tableRect.top - paperRect.top));
+                const x2 = toDxfX(unscale(tableRect.right - paperRect.left));
+                const y2 = toDxfY(unscale(tableRect.bottom - paperRect.top));
+                dxf.addLine(x1, y1, x2, y1, 7);
+                dxf.addLine(x2, y1, x2, y2, 7);
+                dxf.addLine(x2, y2, x1, y2, 7);
+                dxf.addLine(x1, y2, x1, y1, 7);
 
-        const cells = table.querySelectorAll('th, td');
-        cells.forEach(cell => {
-            const r = cell.getBoundingClientRect();
-            const cx1 = toDxfX(unscale(r.left - paperRect.left));
-            const cy1 = toDxfY(unscale(r.top - paperRect.top));
-            const cx2 = toDxfX(unscale(r.right - paperRect.left));
-            const cy2 = toDxfY(unscale(r.bottom - paperRect.top));
-            dxf.addLine(cx1, cy2, cx2, cy2, 7);
-            dxf.addLine(cx2, cy1, cx2, cy2, 7);
-        });
-    });
+                const cells = table.querySelectorAll('th, td');
+                cells.forEach(cell => {
+                    const r = cell.getBoundingClientRect();
+                    const cx1 = toDxfX(unscale(r.left - paperRect.left));
+                    const cy1 = toDxfY(unscale(r.top - paperRect.top));
+                    const cx2 = toDxfX(unscale(r.right - paperRect.left));
+                    const cy2 = toDxfY(unscale(r.bottom - paperRect.top));
+                    dxf.addLine(cx1, cy2, cx2, cy2, 7);
+                    dxf.addLine(cx2, cy1, cx2, cy2, 7);
+                });
+            });
 
-    const textElements = Array.from(draggable.querySelectorAll('table td, table th, .sub-draggable'));
-    // 成果表・面積表のタイトル行
-    const titleDiv = draggable.querySelector('div:first-child');
-    if (titleDiv && titleDiv.textContent.includes('表') && !titleDiv.querySelector('table')) {
-        textElements.push(titleDiv);
-    }
-    if (draggable.classList.contains('closure-info')) {
-        textElements.push(draggable);
-    }
-    textElements.forEach(el => drawTextEl(el, draggable));
-    
-    dxf.endGroup();
+            const textElements = Array.from(draggable.querySelectorAll('table td, table th'));
+            const titleDiv = draggable.querySelector('div:first-child');
+            if (titleDiv && titleDiv.textContent.includes('表') && !titleDiv.querySelector('table')) {
+                textElements.push(titleDiv);
+            }
+            if (draggable.classList.contains('closure-info')) {
+                textElements.push(draggable);
+            }
+            textElements.forEach(el => drawTextEl(el, draggable));
+            
+            dxf.endGroup();
         });
 
         const dxfStr = dxf.toString();
