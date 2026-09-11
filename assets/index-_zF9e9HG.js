@@ -521,10 +521,13 @@ setTimeout(() => { try {
         if (m) rot = parseFloat(m[1]) || 0;
     }
     
-    let py = unscale(rect.bottom - paperRect.top) - (fontSizePx * scale * 0.2); 
     const lines = text.split(String.fromCharCode(10));
+    const lineHeightPx = fontSizePx * scale * 1.4; // 1.4 spacing for better readability
+    const totalTextHeight = lines.length * lineHeightPx;
+    const startY = unscale(rect.top - paperRect.top) + (unscale(rect.height) - totalTextHeight) / 2;
+    
     lines.forEach((line, idx) => {
-        let yOffset = py + idx * fontSizePx * scale * 0.35;
+        let yOffset = startY + (idx * lineHeightPx) + (fontSizePx * scale * 0.9);
         dxf.addText(line.trim(), toDxfX(px), toDxfY(yOffset), hMm, 7, alignCode, rot);
     });
         };
