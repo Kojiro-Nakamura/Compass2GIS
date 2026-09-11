@@ -168,10 +168,14 @@ table { border-collapse: collapse; border: 1px solid #000; } th, td { border: 1p
         <div class="resize-handle n" data-dir="n"></div><div class="resize-handle s" data-dir="s"></div><div class="resize-handle w" data-dir="w"></div><div class="resize-handle e" data-dir="e"></div>
         <div class="resize-handle nw" data-dir="nw"></div><div class="resize-handle ne" data-dir="ne"></div><div class="resize-handle sw" data-dir="sw"></div><div class="resize-handle se" data-dir="se"></div>
     </div>
-    <img src="${expRes.dataURL}" draggable="false" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 1;">
+    <div style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 1;">
+        ${expRes.svgString}
+    </div>
     ${labelsHTML}
         </div>
-        <img src="${compSVG}" class="compass-image draggable no-scale no-bg" draggable="false">
+        <div class="compass-image draggable no-scale no-bg">
+            ${compSVG.svgString}
+        </div>
         <div class="attr-table-wrapper draggable"><table>${attrTable}</table></div>${resTable}${areaTable}
         ${this.els.closureInfo.innerText ? `<div class="closure-info draggable" style="bottom:15mm; left:15mm; padding:5px; font-size:9pt;">閉合状況: ${this.els.closureInfo.innerText}</div>` : ''}
     </div>
@@ -689,7 +693,15 @@ setTimeout(() => { try {
         });
     });
 
-    const textElements = Array.from(draggable.querySelectorAll('table td, table th, .title'));
+    const textElements = Array.from(draggable.querySelectorAll('table td, table th, .sub-draggable'));
+    // 成果表・面積表のタイトル行
+    const titleDiv = draggable.querySelector('div:first-child');
+    if (titleDiv && titleDiv.textContent.includes('表') && !titleDiv.querySelector('table')) {
+        textElements.push(titleDiv);
+    }
+    if (draggable.classList.contains('closure-info')) {
+        textElements.push(draggable);
+    }
     textElements.forEach(el => drawTextEl(el, draggable));
     
     dxf.endGroup();
@@ -809,7 +821,8 @@ setTimeout(() => { try {
 
         if (minX === Infinity) { minX = 0; minY = 0; maxX = conf.expW; maxY = conf.expH; }
         const mg = 20, tx = Math.max(0, minX-mg), ty = Math.max(0, minY-mg), tw = maxX-minX+mg*2, th = maxY-minY+mg*2;
-        return { dataURL: 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${tx} ${ty} ${tw} ${th}" width="${tw}" height="${th}">${svg}</svg>`))), x: tx, y: ty, w: tw, h: th, pxPerMm: conf.expW / conf.w };
+        const svgString = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${tx} ${ty} ${tw} ${th}" width="100%" height="100%">${svg}</svg>`;
+        return { dataURL: 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString))), svgString, x: tx, y: ty, w: tw, h: th, pxPerMm: conf.expW / conf.w };
     },
 
     _generateDraggableLabelsHTML(scale, ox, oy, pxPerMm, tx, ty) {
@@ -868,9 +881,10 @@ setTimeout(() => { try {
 
     _generateCompassSVGDataURL(conf, dec) {
         const uS = Math.min(conf.expW, conf.expH) / 800, r = 35 * uS, s = r * 4, cx = s/2, cy = s/2;
-        let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${s} ${s}" width="${s}" height="${s}"><line x1="${cx}" y1="${cy-r}" x2="${cx}" y2="${cy+r}" stroke="#9ca3af" stroke-width="${1.5*uS}" /><line x1="${cx-r}" y1="${cy}" x2="${cx+r}" y2="${cy}" stroke="#9ca3af" stroke-width="${1.5*uS}" /><polygon points="${cx},${cy-r-6*uS} ${cx+5*uS},${cy-r+12*uS} ${cx-5*uS},${cy-r+12*uS}" fill="${this.CONFIG.colors.compassText}" /><text x="${cx}" y="${cy-r-13*uS}" font-family="sans-serif" font-size="${Math.round(16*uS)}px" font-weight="bold" fill="${this.CONFIG.colors.compassText}" text-anchor="middle">N</text>`;
+        let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${s} ${s}" width="100%" height="100%"><line x1="${cx}" y1="${cy-r}" x2="${cx}" y2="${cy+r}" stroke="#9ca3af" stroke-width="${1.5*uS}" /><line x1="${cx-r}" y1="${cy}" x2="${cx+r}" y2="${cy}" stroke="#9ca3af" stroke-width="${1.5*uS}" /><polygon points="${cx},${cy-r-6*uS} ${cx+5*uS},${cy-r+12*uS} ${cx-5*uS},${cy-r+12*uS}" fill="${this.CONFIG.colors.compassText}" /><text x="${cx}" y="${cy-r-13*uS}" font-family="sans-serif" font-size="${Math.round(16*uS)}px" font-weight="bold" fill="${this.CONFIG.colors.compassText}" text-anchor="middle">N</text>`;
         if (this.els.chkMagDeclination.checked && parseFloat(dec) !== 0) { const rad = -parseFloat(dec) * Math.PI / 180; const cos = Math.cos(rad), sin = Math.sin(rad); const rx = (px, py) => cx + px * cos - py * sin; const ry = (px, py) => cy + px * sin + py * cos; const l1x = rx(0, -r), l1y = ry(0, -r); const p1x = rx(0, -r-2*uS), p1y = ry(0, -r-2*uS); const p2x = rx(4*uS, -r+8*uS), p2y = ry(4*uS, -r+8*uS); const p3x = rx(-4*uS, -r+8*uS), p3y = ry(-4*uS, -r+8*uS); const tx = rx(0, -r-6*uS), ty = ry(0, -r-6*uS); svg += `<line x1="${cx}" y1="${cy}" x2="${l1x}" y2="${l1y}" stroke="${this.CONFIG.colors.compassArrow}" stroke-width="${2.5*uS}" /><polygon points="${p1x},${p1y} ${p2x},${p2y} ${p3x},${p3y}" fill="${this.CONFIG.colors.compassArrow}" /><text x="${tx}" y="${ty}" font-family="sans-serif" font-size="${Math.round(14*uS)}px" fill="${this.CONFIG.colors.compassArrow}" text-anchor="middle">MN</text>`; }
-        return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg + `</svg>`)));
+        const svgString = svg + `</svg>`;
+        return { dataURL: 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString))), svgString };
     },
 
     exportJSON(fileName) {
