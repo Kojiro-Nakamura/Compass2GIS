@@ -90,7 +90,7 @@ class CompassSurveyApp {
                     attrTableBody: $id('attrTableBody'),
                     propertyPanel: $id('propertyPanel'), propColor: $id('propColor'), propLineWidth: $id('propLineWidth'),
                     propLineStyle: $id('propLineStyle'), propFontSize: $id('propFontSize'), rowLineWidth: $id('rowLineWidth'),
-                    rowLineStyle: $id('rowLineStyle'), rowFontSize: $id('rowFontSize'), btnCloseProp: $id('btnCloseProp')
+                    rowLineStyle: $id('rowLineStyle'), rowFontSize: $id('rowFontSize'), btnCloseProp: $id('btnCloseProp'), btnDeleteProp: $id('btnDeleteProp')
                 };
 
                 this.els.dropdown.className = 'custom-dropdown';
@@ -334,6 +334,14 @@ class CompassSurveyApp {
                         if (this.state.interactionMode === 'line') this.finishCurrentLine();
                         if (this.state.selectedAnnotation) this._clearSelection();
                         if (activeModal && activeModal.cancel) activeModal.cancel.click();
+                    } else if (e.key === 'Backspace' || e.key === 'Delete') {
+                        if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
+                        if (this.state.interactionMode === 'line' && this.state.currentLine.length > 0) {
+                            this.state.currentLine.pop();
+                            this._redrawAll();
+                        } else if (this.state.selectedAnnotation) {
+                            this.els.btnDeleteProp.click();
+                        }
                     } else if (e.key === 'Enter') {
                         if (document.activeElement && document.activeElement.tagName.toLowerCase() === 'textarea') return;
                         if (activeModal && activeModal.apply && !activeModal.apply.disabled) {
@@ -362,6 +370,17 @@ class CompassSurveyApp {
                 this.els.propFontSize.addEventListener('input', (e) => updateProp('fontSize', parseInt(e.target.value, 10) || 14));
                 this.els.propFontSize.addEventListener('change', pushHistory);
                 bindClick(this.els.btnCloseProp, () => this._clearSelection());
+                bindClick(this.els.btnDeleteProp, () => {
+                    const sel = this.state.selectedAnnotation;
+                    if (sel) {
+                        if (sel.type === 'text') this.state.annotations.texts.splice(sel.index, 1);
+                        else if (sel.type === 'line') this.state.annotations.lines.splice(sel.index, 1);
+                        this._clearSelection();
+                        this.saveToLocalStorage();
+                        this.pushState();
+                        this._redrawAll();
+                    }
+                });
             }
 
             _initDragDropEvents() {

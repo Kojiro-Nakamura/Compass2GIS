@@ -142,7 +142,10 @@
                     <select id="propLineStyle"><option value="solid">実線</option><option value="dashed">破線</option><option value="dotted">点線</option></select>
                 </div>
                 <div class="prop-row" id="rowFontSize" style="display: none;"><label>サイズ:</label><input type="number" id="propFontSize" min="8" max="100" value="14"></div>
-                <div style="text-align: right; margin-top: 4px;"><button id="btnCloseProp" class="small" style="background-color: #9ca3af; height: 20px;">閉じる</button></div>
+                <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+                    <button id="btnDeleteProp" class="small danger" style="height: 20px;" title="選択中の図形を削除">🗑️ 削除</button>
+                    <button id="btnCloseProp" class="small" style="background-color: #9ca3af; height: 20px;">閉じる</button>
+                </div>
             </div>
 
             <canvas id="previewCanvas"></canvas>
