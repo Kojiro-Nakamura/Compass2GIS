@@ -6,7 +6,7 @@
     <title>コンパスtoGIS（ブラウザ版）</title>
     <link rel="icon" type="image/svg+xml" href="./assets/favicon-DKD_Nneq.svg" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-  <script type="module" crossorigin src="./assets/index-D9zOie6s.js"></script>
+  <script type="module" crossorigin src="./assets/index--TVeOvjV.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-CXN7w4D-.css">
 </head>
 <body>
@@ -143,7 +143,10 @@
                     <select id="propLineStyle"><option value="solid">実線</option><option value="dashed">破線</option><option value="dotted">点線</option></select>
                 </div>
                 <div class="prop-row" id="rowFontSize" style="display: none;"><label>サイズ:</label><input type="number" id="propFontSize" min="8" max="100" value="14"></div>
-                <div style="text-align: right; margin-top: 4px;"><button id="btnCloseProp" class="small" style="background-color: #9ca3af; height: 20px;">閉じる</button></div>
+                <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+                    <button id="btnDeleteProp" class="small danger" style="height: 20px;" title="選択中の図形を削除">🗑️ 削除</button>
+                    <button id="btnCloseProp" class="small" style="background-color: #9ca3af; height: 20px;">閉じる</button>
+                </div>
             </div>
 
             <canvas id="previewCanvas"></canvas>
