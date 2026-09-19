@@ -14,6 +14,7 @@ export const mapView = {
         this.map.on('click', (e) => this.handleMapClick(e));
         this.map.on('dragstart', () => document.body.classList.add('left-dragging'));
         this.map.on('dragend', () => document.body.classList.remove('left-dragging'));
+        this.map.on('zoomend', () => this.updateMapDrawing(false));
         this.map.on('contextmenu', (e) => { e.originalEvent.preventDefault(); if (this.state.mapView.rightDragMoved) return; if (this.state.interactionMode === 'line') this.finishCurrentLine(); });
 
         this.els.mapContainer.addEventListener('mousedown', (e) => {
