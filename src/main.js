@@ -282,10 +282,10 @@ class CompassSurveyApp {
                 this.els.canvas.addEventListener('wheel', this.handleWheel);
                 this.els.canvas.addEventListener('mousedown', this.handleMouseDown, { passive: false });
                 this.els.canvas.addEventListener('touchstart', this.handleMouseDown, { passive: false });
-                window.addEventListener('mouseup', this.handleMouseUp);
-                window.addEventListener('touchend', this.handleMouseUp);
-                window.addEventListener('mousemove', this.handleMouseMove, { passive: false });
-                window.addEventListener('touchmove', this.handleMouseMove, { passive: false });
+                window.addEventListener('mouseup', this.handleMouseUp, { capture: true });
+                window.addEventListener('touchend', this.handleMouseUp, { capture: true });
+                window.addEventListener('mousemove', this.handleMouseMove, { passive: false, capture: true });
+                window.addEventListener('touchmove', this.handleMouseMove, { passive: false, capture: true });
                 
                 this.els.canvas.addEventListener('contextmenu', (e) => {
                     e.preventDefault();

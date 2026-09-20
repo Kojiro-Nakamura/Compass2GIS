@@ -158,6 +158,8 @@ export const mapView = {
                         this.state.view.isScaling = true;
                         this.state.view.scalingTarget = { type: 'line', index: i, ref: line, corner: cornerIds[cIdx] };
                         this.state.view.scalingInitialState = JSON.parse(JSON.stringify(line));
+                        this.state.view.movingLayer = polyline;
+                        this.state.view.movingExtras = { highlightPolyline, handleLine, hMarker };
                         
                         this.state.view.dragStartX = (evt.originalEvent.touches ? evt.originalEvent.touches[0].clientX : evt.originalEvent.clientX);
                         this.state.view.dragStartY = (evt.originalEvent.touches ? evt.originalEvent.touches[0].clientY : evt.originalEvent.clientY);
@@ -293,6 +295,8 @@ export const mapView = {
                         this.state.view.isScaling = true;
                         this.state.view.scalingTarget = { type: 'text', index: i, ref: t, corner: cornerIds[cIdx] };
                         this.state.view.scalingInitialState = JSON.parse(JSON.stringify(t));
+                        this.state.view.movingLayer = marker;
+                        this.state.view.movingExtras = { handleLine, hMarker };
                         
                         this.state.view.dragStartX = (evt.originalEvent.touches ? evt.originalEvent.touches[0].clientX : evt.originalEvent.clientX);
                         this.state.view.dragStartY = (evt.originalEvent.touches ? evt.originalEvent.touches[0].clientY : evt.originalEvent.clientY);
