@@ -90,7 +90,12 @@ export const mapView = {
             let highlightPolyline = null, handleLine = null, cLatLng = null, handleInternalY = 0, hMarker = null;
 
             if (isSel) {
-                highlightPolyline = L.polyline(coords, { color: '#3b82f6', weight: weight + 8, opacity: 0.4, interactive: false }).addTo(this.mapLayerGroup);
+                const tl = this._getRotLatLng({x: minX, y: maxY}, cx, cy, rot);
+                const tr = this._getRotLatLng({x: maxX, y: maxY}, cx, cy, rot);
+                const br = this._getRotLatLng({x: maxX, y: minY}, cx, cy, rot);
+                const bl = this._getRotLatLng({x: minX, y: minY}, cx, cy, rot);
+                highlightPolyline = L.polyline([tl, tr, br, bl, tl], { color: '#3b82f6', weight: 1.5, dashArray: '5, 5', opacity: 0.8, interactive: false }).addTo(this.mapLayerGroup);
+                
                 const topEdgeLatLng = this._getRotLatLng({x: cx, y: maxY}, cx, cy, rot);
                 
                 const pxOffset = 20;
@@ -195,7 +200,7 @@ export const mapView = {
             const bs = t.fontSize || 14;
             const cx = t.x, cy = t.y; 
             const cLatLng = this._getRotLatLng({x: cx, y: cy}, cx, cy, 0), isSel = selected?.type === 'text' && selected?.index === i;
-            const hlStyle = isSel ? `border: 1px solid #3b82f6; background: rgba(59, 130, 246, 0.15); margin-left:-2px; padding:0 2px;` : '';
+            const hlStyle = isSel ? `border: 1.5px dashed #3b82f6; background: rgba(59, 130, 246, 0.15); margin-left:-2px; padding:0 2px;` : '';
             
             const marker = L.marker(cLatLng, { icon: L.divIcon({ className: 'map-annotation-label', html: `<div style="transform: rotate(${(t.rotation || 0) * 180 / Math.PI}deg) translate(-50%, -50%); transform-origin: 0 0; position: absolute; user-select: none; -webkit-user-select: none;"><div draggable="false" style="${hlStyle} color: ${t.color || '#059669'}; font-weight: bold; font-size: ${bs}px; text-shadow: 1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff; white-space: nowrap; pointer-events: auto; transition: background-color 0.1s, border 0.1s; user-select: none; -webkit-user-select: none;">${t.text}</div></div>`, iconSize: [0, 0], iconAnchor: [0, 0] }), interactive: true }).addTo(this.mapLayerGroup);
             

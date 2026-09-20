@@ -180,15 +180,19 @@ export const drawing = {
             ctx.save(); ctx.translate(cPx, cPy); ctx.rotate(rot); ctx.translate(-cPx, -cPy);
 
             if ((isSel || isHov) && uiScale === 1) {
-                ctx.beginPath(); 
-                ctx.strokeStyle = isSel ? 'rgba(59, 130, 246, 0.4)' : 'rgba(59, 130, 246, 0.2)'; 
-                ctx.lineWidth = (line.lineWidth || 2) * uiScale + 8;
-                line.points.forEach((pt, i) => { const px = offsetX + pt.x * scale, py = offsetY - pt.y * scale; if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); });
-                ctx.stroke();
+                const w = (maxX - minX) * scale;
+                const h = (maxY - minY) * scale;
+                
+                ctx.beginPath();
+                ctx.strokeStyle = isSel ? '#3b82f6' : 'rgba(59, 130, 246, 0.5)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([4, 4]);
+                ctx.strokeRect(cPx - w / 2, cPy - h / 2, w, h);
+                ctx.setLineDash([]);
                 
                 if (isSel) {
-                    const topPy = cPy - ((maxY - minY) / 2) * scale - 20; 
-                    ctx.beginPath(); ctx.moveTo(cPx, cPy - ((maxY - minY) / 2) * scale); ctx.lineTo(cPx, topPy); ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 1.5; ctx.stroke();
+                    const topPy = cPy - h / 2 - 20; 
+                    ctx.beginPath(); ctx.moveTo(cPx, cPy - h / 2); ctx.lineTo(cPx, topPy); ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 1.5; ctx.stroke();
                     ctx.beginPath(); ctx.arc(cPx, topPy, 6, 0, Math.PI * 2); ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.stroke();
                 }
             }
@@ -218,7 +222,10 @@ export const drawing = {
                 ctx.fillStyle = isSel ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.08)'; 
                 ctx.fillRect(drawPx - 2, drawPy - h - 2, w + 4, h + 4);
                 ctx.strokeStyle = isSel ? 'rgba(59, 130, 246, 0.8)' : 'rgba(59, 130, 246, 0.4)'; 
-                ctx.lineWidth = 1; ctx.strokeRect(drawPx - 2, drawPy - h - 2, w + 4, h + 4);
+                ctx.lineWidth = 1; 
+                ctx.setLineDash([4, 4]);
+                ctx.strokeRect(drawPx - 2, drawPy - h - 2, w + 4, h + 4);
+                ctx.setLineDash([]);
                 
                 if (isSel) {
                     const topPy = cPy - h / 2 - 20;
