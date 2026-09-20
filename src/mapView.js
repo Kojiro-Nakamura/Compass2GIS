@@ -272,10 +272,12 @@ export const mapView = {
                 });
                 
                 const bsMap = t.fontSize || 14;
-                const tl = this._getRotLatLng({x: cx - bsMap, y: cy + bsMap/2}, cx, cy, t.rotation || 0);
-                const tr = this._getRotLatLng({x: cx + bsMap, y: cy + bsMap/2}, cx, cy, t.rotation || 0);
-                const br = this._getRotLatLng({x: cx + bsMap, y: cy - bsMap/2}, cx, cy, t.rotation || 0);
-                const bl = this._getRotLatLng({x: cx - bsMap, y: cy - bsMap/2}, cx, cy, t.rotation || 0);
+                const bsMapH = this._getPixelsToInternalDistance(bsMap);
+                const bsMapW = this._getPixelsToInternalDistance(Utils.estimateTextWidth(t.text, bsMap));
+                const tl = this._getRotLatLng({x: cx - bsMapW/2, y: cy + bsMapH/2}, cx, cy, t.rotation || 0);
+                const tr = this._getRotLatLng({x: cx + bsMapW/2, y: cy + bsMapH/2}, cx, cy, t.rotation || 0);
+                const br = this._getRotLatLng({x: cx + bsMapW/2, y: cy - bsMapH/2}, cx, cy, t.rotation || 0);
+                const bl = this._getRotLatLng({x: cx - bsMapW/2, y: cy - bsMapH/2}, cx, cy, t.rotation || 0);
                 
                 [tl, tr, br, bl].forEach((cornerLatLng, cIdx) => {
                     const cornerIds = ['tl', 'tr', 'br', 'bl'];
