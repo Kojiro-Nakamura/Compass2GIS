@@ -284,8 +284,11 @@ class CompassSurveyApp {
                 this.els.canvas.addEventListener('touchstart', this.handleMouseDown, { passive: false });
                 window.addEventListener('mouseup', this.handleMouseUp, { capture: true });
                 window.addEventListener('touchend', this.handleMouseUp, { capture: true });
+                window.addEventListener('pointerup', this.handleMouseUp, { capture: true });
+                window.addEventListener('pointercancel', this.handleMouseUp, { capture: true });
                 window.addEventListener('mousemove', this.handleMouseMove, { passive: false, capture: true });
                 window.addEventListener('touchmove', this.handleMouseMove, { passive: false, capture: true });
+                window.addEventListener('pointermove', this.handleMouseMove, { passive: false, capture: true });
                 
                 this.els.canvas.addEventListener('contextmenu', (e) => {
                     e.preventDefault();
@@ -1216,6 +1219,7 @@ class CompassSurveyApp {
 
             // ==== CanvasとMapのドラッグ操作を統合したhandleMouseMove ====
             handleMouseMove = (e) => {
+                if (e.cancelable && (this.state.view.isMovingAnnotation || this.state.view.isScaling || this.state.view.isRotating || (this.isMapMode && this.state.mapView.isRightDragging) || (!this.isMapMode && this.state.view.isRightDragging))) { e.preventDefault(); }
                 const clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : (e.changedTouches && e.changedTouches.length > 0 ? e.changedTouches[0].clientX : e.clientX);
                 const clientY = e.touches && e.touches.length > 0 ? e.touches[0].clientY : (e.changedTouches && e.changedTouches.length > 0 ? e.changedTouches[0].clientY : e.clientY);
                 if (this.isMapMode && this.state.mapView.isRightDragging) {
