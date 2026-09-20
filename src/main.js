@@ -400,7 +400,15 @@ class CompassSurveyApp {
                         if (parsed.tableData && parsed.tableData.length > 0) {
                             this.state.tableData = parsed.tableData;
                             if (parsed.attributes) this.state.attributes = parsed.attributes;
-                            if (parsed.annotations) this.state.annotations = parsed.annotations;
+                            if (parsed.annotations) {
+                                this.state.annotations = parsed.annotations;
+                                if (this.state.annotations.texts) {
+                                    this.state.annotations.texts = this.state.annotations.texts.filter(t => !isNaN(t.x) && !isNaN(t.y));
+                                }
+                                if (this.state.annotations.lines) {
+                                    this.state.annotations.lines = this.state.annotations.lines.filter(l => l.points && l.points.every(p => !isNaN(p.x) && !isNaN(p.y)));
+                                }
+                            }
                             
                             const set = parsed.settings || {};
                             if (set.lat !== undefined) this.els.inputLat.value = set.lat;

@@ -94,6 +94,7 @@ export const mapView = {
                 const tr = this._getRotLatLng({x: maxX, y: maxY}, cx, cy, rot);
                 const br = this._getRotLatLng({x: maxX, y: minY}, cx, cy, rot);
                 const bl = this._getRotLatLng({x: minX, y: minY}, cx, cy, rot);
+                cLatLng = this._getRotLatLng({x: cx, y: cy}, cx, cy, 0);
                 highlightPolyline = L.polyline([tl, tr, br, bl, tl], { color: '#3b82f6', weight: 1.5, dashArray: '5, 5', opacity: 0.8, interactive: false }).addTo(this.mapLayerGroup);
                 
                 const topEdgeLatLng = this._getRotLatLng({x: cx, y: maxY}, cx, cy, rot);
@@ -273,7 +274,7 @@ export const mapView = {
                 
                 const bsMap = t.fontSize || 14;
                 const bsMapH = this._getPixelsToInternalDistance(bsMap);
-                const bsMapW = this._getPixelsToInternalDistance(Utils.estimateTextWidth(t.text, bsMap));
+                const bsMapW = this._getPixelsToInternalDistance(Utils.estimateTextWidth(t.text || '', bsMap));
                 const tl = this._getRotLatLng({x: cx - bsMapW/2, y: cy + bsMapH/2}, cx, cy, t.rotation || 0);
                 const tr = this._getRotLatLng({x: cx + bsMapW/2, y: cy + bsMapH/2}, cx, cy, t.rotation || 0);
                 const br = this._getRotLatLng({x: cx + bsMapW/2, y: cy - bsMapH/2}, cx, cy, t.rotation || 0);

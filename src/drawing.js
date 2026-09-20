@@ -52,7 +52,7 @@ export const drawing = {
             let boxW = 0;
             if (target.type === 'text') {
                 const baseSize = ref.fontSize || 14;
-                boxW = Utils.estimateTextWidth(ref.text, baseSize) * scale;
+                boxW = Utils.estimateTextWidth(ref.text || '', baseSize) * scale;
             } else {
                 let minX = Infinity, maxX = -Infinity;
                 ref.points.forEach(p => { if(p.x<minX)minX=p.x; if(p.x>maxX)maxX=p.x; });
@@ -66,7 +66,7 @@ export const drawing = {
         }
 
         for (let i = this.state.annotations.texts.length - 1; i >= 0; i--) {
-            const t = this.state.annotations.texts[i], baseSize = t.fontSize || 14, w = Utils.estimateTextWidth(t.text, baseSize);
+            const t = this.state.annotations.texts[i], baseSize = t.fontSize || 14, w = Utils.estimateTextWidth(t.text || '', baseSize);
             const cPx = offsetX + t.x * scale, cPy = offsetY - t.y * scale, rot = t.rotation || 0;
             const dx = mouseX - cPx, dy = mouseY - cPy, cos = Math.cos(-rot), sin = Math.sin(-rot);
             const rotPx = cPx + dx * cos - dy * sin, rotPy = cPy + dx * sin + dy * cos;
@@ -228,7 +228,7 @@ export const drawing = {
         texts.forEach((t, index) => {
             const isSel = sel?.type === 'text' && sel?.index === index, rot = t.rotation || 0, color = t.color || '#059669';
             const isHov = hov?.type === 'text' && hov?.index === index; 
-            const baseSize = t.fontSize || 14, fontSize = Math.round(baseSize * uiScale), w = Utils.estimateTextWidth(t.text, baseSize) * uiScale;
+            const baseSize = t.fontSize || 14, fontSize = Math.round(baseSize * uiScale), w = Utils.estimateTextWidth(t.text || '', baseSize) * uiScale;
             
             const cPx = offsetX + t.x * scale, cPy = offsetY - t.y * scale;
 
