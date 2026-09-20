@@ -280,9 +280,12 @@ class CompassSurveyApp {
             _initCanvasAndGlobalEvents() {
                 window.addEventListener('resize', () => this.resizeCanvas());
                 this.els.canvas.addEventListener('wheel', this.handleWheel);
-                this.els.canvas.addEventListener('mousedown', this.handleMouseDown);
+                this.els.canvas.addEventListener('mousedown', this.handleMouseDown, { passive: false });
+                this.els.canvas.addEventListener('touchstart', this.handleMouseDown, { passive: false });
                 window.addEventListener('mouseup', this.handleMouseUp);
-                window.addEventListener('mousemove', this.handleMouseMove);
+                window.addEventListener('touchend', this.handleMouseUp);
+                window.addEventListener('mousemove', this.handleMouseMove, { passive: false });
+                window.addEventListener('touchmove', this.handleMouseMove, { passive: false });
                 
                 this.els.canvas.addEventListener('contextmenu', (e) => {
                     e.preventDefault();
@@ -1081,15 +1084,16 @@ class CompassSurveyApp {
                 if (this.isMapMode) return;
                 e.preventDefault();
 
-                const r = this.els.canvas.getBoundingClientRect(), mX = e.clientX - r.left, mY = e.clientY - r.top;
+                const r = this.els.canvas.getBoundingClientRect(), mX = (e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX) - r.left, mY = (e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY) - r.top;
                 
-                if (e.button === 2) {
+                const btn = e.button !== undefined ? e.button : 0;
+                    if (btn === 2) {
                     this.state.view.isRightDragging = true; this.state.view.rightDragMoved = false;
-                    this.state.view.dragStartX = this.state.view.lastMouseX = e.clientX; this.state.view.dragStartY = this.state.view.lastMouseY = e.clientY;
+                    this.state.view.dragStartX = this.state.view.lastMouseX = (e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX); this.state.view.dragStartY = this.state.view.lastMouseY = (e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY);
                     document.body.classList.add('right-dragging'); return; 
                 }
 
-                if (e.button === 0) {
+                if (btn === 0) {
                     const target = this._findAnnotationAtCanvas(mX, mY);
                     if (target) {
                         if (target.type === 'handle') { 
@@ -1101,8 +1105,8 @@ class CompassSurveyApp {
                             this.state.view.isScaling = true;
                             this.state.view.scalingTarget = target;
                             this.state.view.scalingInitialState = JSON.parse(JSON.stringify(target.target.ref));
-                            this.state.view.dragStartX = e.clientX;
-                            this.state.view.dragStartY = e.clientY;
+                            this.state.view.dragStartX = (e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX);
+                            this.state.view.dragStartY = (e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY);
                             
                             // Center of the shape in screen pixels
                             let cx, cy;
@@ -1124,8 +1128,8 @@ class CompassSurveyApp {
                             this.state.view.isMovingAnnotation = true;
                             this.state.view.movingTarget = target;
                             this.state.view.dragMoved = false;
-                            this.state.view.dragStartX = this.state.view.lastMouseX = e.clientX; 
-                            this.state.view.dragStartY = this.state.view.lastMouseY = e.clientY;
+                            this.state.view.dragStartX = this.state.view.lastMouseX = (e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX); 
+                            this.state.view.dragStartY = this.state.view.lastMouseY = (e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY);
                             
                             this.state.view.dragStartInternalX = (mX - this.state.view.offsetX) / this.state.view.scale;
                             this.state.view.dragStartInternalY = (this.state.view.offsetY - mY) / this.state.view.scale;
@@ -1136,18 +1140,19 @@ class CompassSurveyApp {
                         }
                     }
                     this.state.view.isDragging = true; this.state.view.dragMoved = false;
-                    this.state.view.dragStartX = this.state.view.lastMouseX = e.clientX; this.state.view.dragStartY = this.state.view.lastMouseY = e.clientY;
+                    this.state.view.dragStartX = this.state.view.lastMouseX = (e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX); this.state.view.dragStartY = this.state.view.lastMouseY = (e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY);
                 }
             };
 
 
 
             handleMouseUp = (e) => {
-                if (e.button === 2) {
+                const btn = e.button !== undefined ? e.button : 0;
+                    if (btn === 2) {
                     this.state.view.isRightDragging = false; if (this.state.mapView) this.state.mapView.isRightDragging = false;
                     document.body.classList.remove('right-dragging');
                 }
-                if (e.button === 0) {
+                if (btn === 0) {
                     if (this.state.view.isRotating) { 
                         this.state.view.isRotating = false; 
                         this.state.view.rotatingTarget = null; 
@@ -1192,7 +1197,7 @@ class CompassSurveyApp {
                     if (this.state.view.isDragging) {
                         this.state.view.isDragging = false; document.body.classList.remove('left-dragging');
                         if (!this.state.view.dragMoved) {
-                            const r = this.els.canvas.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+                            const r = this.els.canvas.getBoundingClientRect(), mx = (e.changedTouches && e.changedTouches.length > 0 ? e.changedTouches[0].clientX : e.clientX) - r.left, my = (e.changedTouches && e.changedTouches.length > 0 ? e.changedTouches[0].clientY : e.clientY) - r.top;
                             const ix = (mx - this.state.view.offsetX) / this.state.view.scale, iy = (this.state.view.offsetY - my) / this.state.view.scale;
 
                             if (this.state.interactionMode === 'text') this._showTextPrompt(ix, iy);
@@ -1211,8 +1216,8 @@ class CompassSurveyApp {
 
             // ==== CanvasとMapのドラッグ操作を統合したhandleMouseMove ====
             handleMouseMove = (e) => {
-                const clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
-                const clientY = e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
+                const clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : (e.changedTouches && e.changedTouches.length > 0 ? e.changedTouches[0].clientX : e.clientX);
+                const clientY = e.touches && e.touches.length > 0 ? e.touches[0].clientY : (e.changedTouches && e.changedTouches.length > 0 ? e.changedTouches[0].clientY : e.clientY);
                 if (this.isMapMode && this.state.mapView.isRightDragging) {
                     const dx = clientX - this.state.mapView.lastMouseX, dy = clientY - this.state.mapView.lastMouseY;
                     if (!this.state.mapView.rightDragMoved && (Math.abs(clientX - this.state.mapView.dragStartX) > 5 || Math.abs(clientY - this.state.mapView.dragStartY) > 5)) this.state.mapView.rightDragMoved = true;
