@@ -44,9 +44,25 @@ export const drawing = {
             }
             const topPy = cPy - boxH / 2 - 20; 
             const rot = ref.rotation || 0;
-            const handlePx = cPx - (topPy - cPy) * Math.sin(rot), handlePy = cPy + (topPy - cPy) * Math.cos(rot);
+            const dx = mouseX - cPx, dy = mouseY - cPy, cos = Math.cos(-rot), sin = Math.sin(-rot);
+            const rotPx = cPx + dx * cos - dy * sin, rotPy = cPy + dx * sin + dy * cos;
             
-            if (Math.sqrt(Math.pow(mouseX - handlePx, 2) + Math.pow(mouseY - handlePy, 2)) < 16) return { type: 'handle', target };
+            if (Math.abs(rotPx - cPx) < 16 && Math.abs(rotPy - topPy) < 16) return { type: 'handle', target };
+            
+            let boxW = 0;
+            if (target.type === 'text') {
+                const baseSize = ref.fontSize || 14;
+                boxW = Utils.estimateTextWidth(ref.text, baseSize) * scale;
+            } else {
+                let minX = Infinity, maxX = -Infinity;
+                ref.points.forEach(p => { if(p.x<minX)minX=p.x; if(p.x>maxX)maxX=p.x; });
+                boxW = (maxX - minX) * scale;
+            }
+            const s = 10;
+            if (Math.abs(rotPx - (cPx - boxW/2)) < s && Math.abs(rotPy - (cPy - boxH/2)) < s) return { type: 'scaleHandle', corner: 'tl', target };
+            if (Math.abs(rotPx - (cPx + boxW/2)) < s && Math.abs(rotPy - (cPy - boxH/2)) < s) return { type: 'scaleHandle', corner: 'tr', target };
+            if (Math.abs(rotPx - (cPx + boxW/2)) < s && Math.abs(rotPy - (cPy + boxH/2)) < s) return { type: 'scaleHandle', corner: 'br', target };
+            if (Math.abs(rotPx - (cPx - boxW/2)) < s && Math.abs(rotPy - (cPy + boxH/2)) < s) return { type: 'scaleHandle', corner: 'bl', target };
         }
 
         for (let i = this.state.annotations.texts.length - 1; i >= 0; i--) {
@@ -194,6 +210,11 @@ export const drawing = {
                     const topPy = cPy - h / 2 - 20; 
                     ctx.beginPath(); ctx.moveTo(cPx, cPy - h / 2); ctx.lineTo(cPx, topPy); ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 1.5; ctx.stroke();
                     ctx.beginPath(); ctx.arc(cPx, topPy, 6, 0, Math.PI * 2); ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.stroke();
+                    
+                    const s = 4;
+                    const corners = [ {x: cPx - w / 2, y: cPy - h / 2}, {x: cPx + w / 2, y: cPy - h / 2}, {x: cPx + w / 2, y: cPy + h / 2}, {x: cPx - w / 2, y: cPy + h / 2} ];
+                    ctx.fillStyle = '#ffffff';
+                    corners.forEach(c => { ctx.fillRect(c.x - s, c.y - s, s * 2, s * 2); ctx.strokeRect(c.x - s, c.y - s, s * 2, s * 2); });
                 }
             }
 
@@ -231,6 +252,11 @@ export const drawing = {
                     const topPy = cPy - h / 2 - 20;
                     ctx.beginPath(); ctx.moveTo(cPx, cPy - h / 2); ctx.lineTo(cPx, topPy); ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 1.5; ctx.stroke();
                     ctx.beginPath(); ctx.arc(cPx, topPy, 6, 0, Math.PI * 2); ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.stroke();
+                    
+                    const s = 4;
+                    const corners = [ {x: cPx - w / 2, y: cPy - h / 2}, {x: cPx + w / 2, y: cPy - h / 2}, {x: cPx + w / 2, y: cPy + h / 2}, {x: cPx - w / 2, y: cPy + h / 2} ];
+                    ctx.fillStyle = '#ffffff';
+                    corners.forEach(c => { ctx.fillRect(c.x - s, c.y - s, s * 2, s * 2); ctx.strokeRect(c.x - s, c.y - s, s * 2, s * 2); });
                 }
             }
             ctx.strokeStyle = 'white'; ctx.lineWidth = Math.max(2, baseSize * 0.2) * uiScale; ctx.lineJoin = 'round';

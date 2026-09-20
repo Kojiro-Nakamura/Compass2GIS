@@ -143,6 +143,29 @@ export const mapView = {
 
                     document.body.classList.add('left-dragging');
                 });
+                
+                [tl, tr, br, bl].forEach((cornerLatLng, cIdx) => {
+                    const cornerIds = ['tl', 'tr', 'br', 'bl'];
+                    const sMarker = L.marker(cornerLatLng, {
+                        icon: L.divIcon({ className: 'map-scale-handle', html: '<div style="width:8px;height:8px;background:#fff;border:1px solid #000;margin:-4px 0 0 -4px;cursor:crosshair;pointer-events:auto;"></div>', iconSize: [0,0] }),
+                        draggable: false, zIndexOffset: 1000
+                    }).addTo(this.mapLayerGroup);
+                    sMarker.on('mousedown', (evt) => {
+                        L.DomEvent.stopPropagation(evt);
+                        L.DomEvent.preventDefault(evt.originalEvent);
+                        this.map.dragging.disable();
+                        this.state.view.isScaling = true;
+                        this.state.view.scalingTarget = { type: 'line', index: i, ref: line, corner: cornerIds[cIdx] };
+                        this.state.view.scalingInitialState = JSON.parse(JSON.stringify(line));
+                        
+                        this.state.view.dragStartX = evt.originalEvent.clientX;
+                        this.state.view.dragStartY = evt.originalEvent.clientY;
+                        
+                        const cPoint = this.map.latLngToContainerPoint(cLatLng);
+                        const rect = this.els.mapContainer.getBoundingClientRect();
+                        this.state.view.scaleCenterPx = { x: cPoint.x + rect.left, y: cPoint.y + rect.top };
+                    });
+                });
             }
 
             polylineHit.on('mouseover', () => {
@@ -246,6 +269,35 @@ export const mapView = {
                     this.state.view.movingExtras = { handleLine, hMarker };
 
                     document.body.classList.add('left-dragging');
+                });
+                
+                const bsMap = t.fontSize || 14;
+                const tl = this._getRotLatLng({x: cx - bsMap, y: cy + bsMap/2}, cx, cy, t.rotation || 0);
+                const tr = this._getRotLatLng({x: cx + bsMap, y: cy + bsMap/2}, cx, cy, t.rotation || 0);
+                const br = this._getRotLatLng({x: cx + bsMap, y: cy - bsMap/2}, cx, cy, t.rotation || 0);
+                const bl = this._getRotLatLng({x: cx - bsMap, y: cy - bsMap/2}, cx, cy, t.rotation || 0);
+                
+                [tl, tr, br, bl].forEach((cornerLatLng, cIdx) => {
+                    const cornerIds = ['tl', 'tr', 'br', 'bl'];
+                    const sMarker = L.marker(cornerLatLng, {
+                        icon: L.divIcon({ className: 'map-scale-handle', html: '<div style="width:8px;height:8px;background:#fff;border:1px solid #000;margin:-4px 0 0 -4px;cursor:crosshair;pointer-events:auto;"></div>', iconSize: [0,0] }),
+                        draggable: false, zIndexOffset: 1000
+                    }).addTo(this.mapLayerGroup);
+                    sMarker.on('mousedown', (evt) => {
+                        L.DomEvent.stopPropagation(evt);
+                        L.DomEvent.preventDefault(evt.originalEvent);
+                        this.map.dragging.disable();
+                        this.state.view.isScaling = true;
+                        this.state.view.scalingTarget = { type: 'text', index: i, ref: t, corner: cornerIds[cIdx] };
+                        this.state.view.scalingInitialState = JSON.parse(JSON.stringify(t));
+                        
+                        this.state.view.dragStartX = evt.originalEvent.clientX;
+                        this.state.view.dragStartY = evt.originalEvent.clientY;
+                        
+                        const cPoint = this.map.latLngToContainerPoint(cLatLng);
+                        const rect = this.els.mapContainer.getBoundingClientRect();
+                        this.state.view.scaleCenterPx = { x: cPoint.x + rect.left, y: cPoint.y + rect.top };
+                    });
                 });
             }
 

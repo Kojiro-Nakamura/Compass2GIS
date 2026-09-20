@@ -1059,6 +1059,28 @@ class CompassSurveyApp {
                             this.state.view.rotatingTarget = target.target; 
                             document.body.classList.add('left-dragging'); 
                             return; 
+                        } else if (target.type === 'scaleHandle') {
+                            this.state.view.isScaling = true;
+                            this.state.view.scalingTarget = target;
+                            this.state.view.scalingInitialState = JSON.parse(JSON.stringify(target.target.ref));
+                            this.state.view.dragStartX = e.clientX;
+                            this.state.view.dragStartY = e.clientY;
+                            
+                            // Center of the shape in screen pixels
+                            let cx, cy;
+                            if (target.target.type === 'text') {
+                                cx = target.target.ref.x; cy = target.target.ref.y;
+                            } else {
+                                let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+                                target.target.ref.points.forEach(p => { if(p.x<minX)minX=p.x; if(p.x>maxX)maxX=p.x; if(p.y<minY)minY=p.y; if(p.y>maxY)maxY=p.y; });
+                                cx = (minX + maxX)/2; cy = (minY + maxY)/2;
+                            }
+                            this.state.view.scaleCenterPx = { 
+                                x: this.state.view.offsetX + cx * this.state.view.scale,
+                                y: this.state.view.offsetY - cy * this.state.view.scale
+                            };
+                            document.body.classList.add('left-dragging');
+                            return;
                         } else if (this.state.interactionMode === 'select') {
                             this._selectAnnotation(target);
                             this.state.view.isMovingAnnotation = true;
@@ -1099,6 +1121,21 @@ class CompassSurveyApp {
                             this.updateMapDrawing(false);
                         }
                         return; 
+                    }
+                    if (this.state.view.isScaling) {
+                        this.state.view.isScaling = false;
+                        this.state.view.scalingTarget = null;
+                        this.state.view.scalingInitialState = null;
+                        document.body.classList.remove('left-dragging');
+                        if (this.isMapMode && this.map) this.map.dragging.enable();
+                        
+                        if (this.state.view.dragMoved) {
+                            this.saveToLocalStorage();
+                            this.pushState();
+                            if (this.isMapMode) this.updateMapDrawing(false);
+                            else this.draw();
+                        }
+                        return;
                     }
                     if (this.state.view.isMovingAnnotation) {
                         this.state.view.isMovingAnnotation = false;
@@ -1206,6 +1243,66 @@ class CompassSurveyApp {
                     
                     this.state.view.lastMouseX = e.clientX;
                     this.state.view.lastMouseY = e.clientY;
+                    return;
+                }
+
+                // 2.5 スケール処理(isScaling)
+                if (this.state.view.isScaling && this.state.view.scalingTarget && this.state.view.scalingInitialState) {
+                    const dx = e.clientX - this.state.view.dragStartX;
+                    const dy = e.clientY - this.state.view.dragStartY;
+                    if (!this.state.view.dragMoved && (Math.abs(dx) > 2 || Math.abs(dy) > 2)) {
+                        this.state.view.dragMoved = true;
+                    }
+                    
+                    if (this.state.view.dragMoved) {
+                        const target = this.state.view.scalingTarget;
+                        const initRef = this.state.view.scalingInitialState;
+                        const ref = (target.target ? target.target.ref : target.ref);
+                        const type = (target.target ? target.target.type : target.type);
+                        const corner = target.corner;
+                        const maintainRatio = e.shiftKey;
+                        
+                        const cPx = this.state.view.scaleCenterPx.x;
+                        const cPy = this.state.view.scaleCenterPx.y;
+                        
+                        const currentDistX = e.clientX - cPx;
+                        const currentDistY = e.clientY - cPy;
+                        const startDistX = this.state.view.dragStartX - cPx;
+                        const startDistY = this.state.view.dragStartY - cPy;
+                        
+                        let scaleX = startDistX !== 0 ? Math.abs(currentDistX / startDistX) : 1;
+                        let scaleY = startDistY !== 0 ? Math.abs(currentDistY / startDistY) : 1;
+                        
+                        if (maintainRatio) {
+                            const scale = Math.max(scaleX, scaleY);
+                            scaleX = scale;
+                            scaleY = scale;
+                        }
+                        
+                        if (type === 'text') {
+                            const baseSize = initRef.fontSize || 14;
+                            ref.fontSize = Math.max(4, baseSize * scaleY);
+                        } else if (type === 'line') {
+                            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+                            initRef.points.forEach(p => { if(p.x<minX)minX=p.x; if(p.x>maxX)maxX=p.x; if(p.y<minY)minY=p.y; if(p.y>maxY)maxY=p.y; });
+                            const cx = (minX + maxX)/2; const cy = (minY + maxY)/2;
+                            
+                            ref.points.forEach((p, i) => {
+                                p.x = cx + (initRef.points[i].x - cx) * scaleX;
+                                p.y = cy + (initRef.points[i].y - cy) * scaleY;
+                                
+                                const currentDec = this.els.chkMagDeclination.checked ? (parseFloat(this.els.inputDeclination.value) || 0) : 0;
+                                const rad = Utils.deg2rad(currentDec);
+                                const cos = Math.cos(-rad);
+                                const sin = Math.sin(-rad);
+                                p.baseX = p.x * cos - p.y * sin;
+                                p.baseY = p.x * sin + p.y * cos;
+                            });
+                        }
+                        
+                        if (this.isMapMode) this.updateMapDrawing(false);
+                        else this.draw();
+                    }
                     return;
                 }
 
