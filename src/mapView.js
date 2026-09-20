@@ -129,15 +129,15 @@ export const mapView = {
                     this.state.view.rotatingTarget = { type: 'line', index: i, ref: line };
                     
                     const rect = this.els.mapContainer.getBoundingClientRect();
-                    const mX = e.originalEvent.clientX - rect.left;
-                    const mY = e.originalEvent.clientY - rect.top;
+                    const mX = (e.originalEvent.touches ? e.originalEvent.touches[0].clientX : e.originalEvent.clientX) - rect.left;
+                    const mY = (e.originalEvent.touches ? e.originalEvent.touches[0].clientY : e.originalEvent.clientY) - rect.top;
                     const point = L.point(mX, mY);
                     const latlng = this.map.containerPointToLatLng(point);
                     const im = this.getInternalCoordsFromLatLng(latlng.lat, latlng.lng);
                     this.state.view.dragStartInternalX = im.x;
                     this.state.view.dragStartInternalY = im.y;
-                    this.state.view.dragStartX = e.originalEvent.clientX;
-                    this.state.view.dragStartY = e.originalEvent.clientY;
+                    this.state.view.dragStartX = (e.originalEvent.touches ? e.originalEvent.touches[0].clientX : e.originalEvent.clientX);
+                    this.state.view.dragStartY = (e.originalEvent.touches ? e.originalEvent.touches[0].clientY : e.originalEvent.clientY);
                     
                     this.state.view.movingLayer = polyline;
                     this.state.view.movingExtras = { highlightPolyline, handleLine, hMarker };
@@ -159,8 +159,8 @@ export const mapView = {
                         this.state.view.scalingTarget = { type: 'line', index: i, ref: line, corner: cornerIds[cIdx] };
                         this.state.view.scalingInitialState = JSON.parse(JSON.stringify(line));
                         
-                        this.state.view.dragStartX = evt.originalEvent.clientX;
-                        this.state.view.dragStartY = evt.originalEvent.clientY;
+                        this.state.view.dragStartX = (evt.originalEvent.touches ? evt.originalEvent.touches[0].clientX : evt.originalEvent.clientX);
+                        this.state.view.dragStartY = (evt.originalEvent.touches ? evt.originalEvent.touches[0].clientY : evt.originalEvent.clientY);
                         
                         const cPoint = this.map.latLngToContainerPoint(cLatLng);
                         const rect = this.els.mapContainer.getBoundingClientRect();
@@ -196,16 +196,16 @@ export const mapView = {
                     this.state.view.movingInitialState = JSON.parse(JSON.stringify(line));
                     
                     const rect = this.els.mapContainer.getBoundingClientRect();
-                    const mX = e.originalEvent.clientX - rect.left;
-                    const mY = e.originalEvent.clientY - rect.top;
+                    const mX = (e.originalEvent.touches ? e.originalEvent.touches[0].clientX : e.originalEvent.clientX) - rect.left;
+                    const mY = (e.originalEvent.touches ? e.originalEvent.touches[0].clientY : e.originalEvent.clientY) - rect.top;
                     const point = L.point(mX, mY);
                     const latlng = this.map.containerPointToLatLng(point);
                     const im = this.getInternalCoordsFromLatLng(latlng.lat, latlng.lng);
                     this.state.view.dragStartInternalX = im.x;
                     this.state.view.dragStartInternalY = im.y;
                     
-                    this.state.view.dragStartX = e.originalEvent.clientX;
-                    this.state.view.dragStartY = e.originalEvent.clientY;
+                    this.state.view.dragStartX = (e.originalEvent.touches ? e.originalEvent.touches[0].clientX : e.originalEvent.clientX);
+                    this.state.view.dragStartY = (e.originalEvent.touches ? e.originalEvent.touches[0].clientY : e.originalEvent.clientY);
 
                     if (isSel && highlightPolyline && handleLine && hMarker) {
                         this.state.view.movingExtras = { highlightPolyline, handleLine, hMarker };
@@ -256,15 +256,15 @@ export const mapView = {
                     this.state.view.rotatingTarget = { type: 'text', index: i, ref: t };
                     
                     const rect = this.els.mapContainer.getBoundingClientRect();
-                    const mX = e.originalEvent.clientX - rect.left;
-                    const mY = e.originalEvent.clientY - rect.top;
+                    const mX = (e.originalEvent.touches ? e.originalEvent.touches[0].clientX : e.originalEvent.clientX) - rect.left;
+                    const mY = (e.originalEvent.touches ? e.originalEvent.touches[0].clientY : e.originalEvent.clientY) - rect.top;
                     const point = L.point(mX, mY);
                     const latlng = this.map.containerPointToLatLng(point);
                     const im = this.getInternalCoordsFromLatLng(latlng.lat, latlng.lng);
                     this.state.view.dragStartInternalX = im.x;
                     this.state.view.dragStartInternalY = im.y;
-                    this.state.view.dragStartX = e.originalEvent.clientX;
-                    this.state.view.dragStartY = e.originalEvent.clientY;
+                    this.state.view.dragStartX = (e.originalEvent.touches ? e.originalEvent.touches[0].clientX : e.originalEvent.clientX);
+                    this.state.view.dragStartY = (e.originalEvent.touches ? e.originalEvent.touches[0].clientY : e.originalEvent.clientY);
                     
                     this.state.view.movingLayer = marker;
                     this.state.view.movingExtras = { handleLine, hMarker };
@@ -294,8 +294,8 @@ export const mapView = {
                         this.state.view.scalingTarget = { type: 'text', index: i, ref: t, corner: cornerIds[cIdx] };
                         this.state.view.scalingInitialState = JSON.parse(JSON.stringify(t));
                         
-                        this.state.view.dragStartX = evt.originalEvent.clientX;
-                        this.state.view.dragStartY = evt.originalEvent.clientY;
+                        this.state.view.dragStartX = (evt.originalEvent.touches ? evt.originalEvent.touches[0].clientX : evt.originalEvent.clientX);
+                        this.state.view.dragStartY = (evt.originalEvent.touches ? evt.originalEvent.touches[0].clientY : evt.originalEvent.clientY);
                         
                         const cPoint = this.map.latLngToContainerPoint(cLatLng);
                         const rect = this.els.mapContainer.getBoundingClientRect();
@@ -337,16 +337,16 @@ export const mapView = {
                     this.state.view.movingInitialState = JSON.parse(JSON.stringify(t));
                     
                     const rect = this.els.mapContainer.getBoundingClientRect();
-                    const mX = e.originalEvent.clientX - rect.left;
-                    const mY = e.originalEvent.clientY - rect.top;
+                    const mX = (e.originalEvent.touches ? e.originalEvent.touches[0].clientX : e.originalEvent.clientX) - rect.left;
+                    const mY = (e.originalEvent.touches ? e.originalEvent.touches[0].clientY : e.originalEvent.clientY) - rect.top;
                     const point = L.point(mX, mY);
                     const latlng = this.map.containerPointToLatLng(point);
                     const im = this.getInternalCoordsFromLatLng(latlng.lat, latlng.lng);
                     this.state.view.dragStartInternalX = im.x;
                     this.state.view.dragStartInternalY = im.y;
                     
-                    this.state.view.dragStartX = e.originalEvent.clientX;
-                    this.state.view.dragStartY = e.originalEvent.clientY;
+                    this.state.view.dragStartX = (e.originalEvent.touches ? e.originalEvent.touches[0].clientX : e.originalEvent.clientX);
+                    this.state.view.dragStartY = (e.originalEvent.touches ? e.originalEvent.touches[0].clientY : e.originalEvent.clientY);
 
                     if (isSel && handleLine && hMarker) {
                         this.state.view.movingExtras = { handleLine, hMarker };

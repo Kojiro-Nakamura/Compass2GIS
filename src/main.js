@@ -446,7 +446,37 @@ class CompassSurveyApp {
                 this.renderTable(); this.resizeCanvas(); this.updateDrawing(true);
             }
 
-            pushState(isInitial = false) {
+            _updateLiveAnnotationDrawing() {
+        if (this.isMapMode) {
+            if ((this.state.view.isMovingAnnotation || this.state.view.isScaling || this.state.view.isRotating) && this.state.view.movingLayer) {
+                const target = this.state.view.isScaling ? this.state.view.scalingTarget : (this.state.view.isRotating ? this.state.view.rotatingTarget : this.state.view.movingTarget);
+                const ref = target.target ? target.target.ref : target.ref;
+                const type = target.target ? target.target.type : target.type;
+                if (type === 'line' && this.state.view.movingLayer.setLatLngs) {
+                    const lat0 = parseFloat(this.els.inputLat.value) || 0, lon0 = parseFloat(this.els.inputLon.value) || 0;
+                    const lonDPM = CONSTANTS.LAT_DEG_PER_METER / Math.cos(Utils.deg2rad(lat0));
+                    const coords = ref.points.map(p => [lat0 + p.y * CONSTANTS.LAT_DEG_PER_METER, lon0 + p.x * lonDPM]);
+                    this.state.view.movingLayer.setLatLngs(coords);
+                } else if (type === 'text' && this.state.view.movingLayer.setLatLng) {
+                    const lat0 = parseFloat(this.els.inputLat.value) || 0, lon0 = parseFloat(this.els.inputLon.value) || 0;
+                    const lonDPM = CONSTANTS.LAT_DEG_PER_METER / Math.cos(Utils.deg2rad(lat0));
+                    this.state.view.movingLayer.setLatLng([lat0 + ref.y * CONSTANTS.LAT_DEG_PER_METER, lon0 + ref.x * lonDPM]);
+                    const icon = this.state.view.movingLayer.options.icon;
+                    if (icon && icon.options) {
+                        const newSize = ref.fontSize || 14;
+                        icon.options.html = `<div style="font-size:${newSize}px;color:${ref.color || '#000'};white-space:nowrap;transform:translate(-50%,-50%) rotate(${(ref.rotation||0)*180/Math.PI}deg);">${Utils.escapeHTML(ref.text || '')}</div>`;
+                        this.state.view.movingLayer.setIcon(icon);
+                    }
+                }
+            } else {
+                this.updateMapDrawing(false);
+            }
+        } else {
+            this.draw();
+        }
+    }
+
+    pushState(isInitial = false) {
                 if (this.isUndoing) return;
                 const currentState = {
                     tableData: JSON.parse(JSON.stringify(this.state.tableData)),
@@ -1140,8 +1170,7 @@ class CompassSurveyApp {
                         if (this.state.view.dragMoved) {
                             this.saveToLocalStorage();
                             this.pushState();
-                            if (this.isMapMode) this.updateMapDrawing(false);
-                            else this.draw();
+                            this._updateLiveAnnotationDrawing();
                         }
                         return;
                     }
@@ -1156,7 +1185,7 @@ class CompassSurveyApp {
                         if (this.state.view.dragMoved) {
                             this.saveToLocalStorage();
                             this.pushState();
-                            if (this.isMapMode) this.updateMapDrawing(false); 
+                            this._updateLiveAnnotationDrawing(); 
                         }
                         return;
                     }
@@ -1182,11 +1211,13 @@ class CompassSurveyApp {
 
             // ==== CanvasとMapのドラッグ操作を統合したhandleMouseMove ====
             handleMouseMove = (e) => {
+                const clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
                 if (this.isMapMode && this.state.mapView.isRightDragging) {
-                    const dx = e.clientX - this.state.mapView.lastMouseX, dy = e.clientY - this.state.mapView.lastMouseY;
-                    if (!this.state.mapView.rightDragMoved && (Math.abs(e.clientX - this.state.mapView.dragStartX) > 5 || Math.abs(e.clientY - this.state.mapView.dragStartY) > 5)) this.state.mapView.rightDragMoved = true;
+                    const dx = clientX - this.state.mapView.lastMouseX, dy = clientY - this.state.mapView.lastMouseY;
+                    if (!this.state.mapView.rightDragMoved && (Math.abs(clientX - this.state.mapView.dragStartX) > 5 || Math.abs(clientY - this.state.mapView.dragStartY) > 5)) this.state.mapView.rightDragMoved = true;
                     if (this.state.mapView.rightDragMoved) this.map.panBy([-dx, -dy], {animate: false});
-                    this.state.mapView.lastMouseX = e.clientX; this.state.mapView.lastMouseY = e.clientY;
+                    this.state.mapView.lastMouseX = clientX; this.state.mapView.lastMouseY = clientY;
                     return;
                 }
 
@@ -1194,8 +1225,8 @@ class CompassSurveyApp {
                 let currentInternalX, currentInternalY, mX, mY;
                 if (this.isMapMode) {
                     const rect = this.els.mapContainer.getBoundingClientRect();
-                    mX = e.clientX - rect.left;
-                    mY = e.clientY - rect.top;
+                    mX = clientX - rect.left;
+                    mY = clientY - rect.top;
                     const point = L.point(mX, mY);
                     const latlng = this.map.containerPointToLatLng(point);
                     const im = this.getInternalCoordsFromLatLng(latlng.lat, latlng.lng);
@@ -1203,8 +1234,8 @@ class CompassSurveyApp {
                     currentInternalY = im.y;
                 } else {
                     const r = this.els.canvas.getBoundingClientRect();
-                    mX = e.clientX - r.left; 
-                    mY = e.clientY - r.top;
+                    mX = clientX - r.left; 
+                    mY = clientY - r.top;
                     currentInternalX = (mX - this.state.view.offsetX) / this.state.view.scale;
                     currentInternalY = (this.state.view.offsetY - mY) / this.state.view.scale;
                 }
@@ -1244,20 +1275,20 @@ class CompassSurveyApp {
 
                     const currentDec = this.els.chkMagDeclination.checked ? (parseFloat(this.els.inputDeclination.value) || 0) : 0;
                     
-                    ref.rotation = Math.atan2(e.clientY - cPy, e.clientX - cPx) + Math.PI / 2;
+                    ref.rotation = Math.atan2(clientY - cPy, clientX - cPx) + Math.PI / 2;
                     ref.baseRotation = ref.rotation + Utils.deg2rad(currentDec);
 
                     this._updateLiveAnnotationDrawing();
                     
-                    this.state.view.lastMouseX = e.clientX;
-                    this.state.view.lastMouseY = e.clientY;
+                    this.state.view.lastMouseX = clientX;
+                    this.state.view.lastMouseY = clientY;
                     return;
                 }
 
                 // 2.5 スケール処理(isScaling)
                 if (this.state.view.isScaling && this.state.view.scalingTarget && this.state.view.scalingInitialState) {
-                    const dx = e.clientX - this.state.view.dragStartX;
-                    const dy = e.clientY - this.state.view.dragStartY;
+                    const dx = clientX - this.state.view.dragStartX;
+                    const dy = clientY - this.state.view.dragStartY;
                     if (!this.state.view.dragMoved && (Math.abs(dx) > 2 || Math.abs(dy) > 2)) {
                         this.state.view.dragMoved = true;
                     }
@@ -1273,8 +1304,8 @@ class CompassSurveyApp {
                         const cPx = this.state.view.scaleCenterPx.x;
                         const cPy = this.state.view.scaleCenterPx.y;
                         
-                        const currentDistX = e.clientX - cPx;
-                        const currentDistY = e.clientY - cPy;
+                        const currentDistX = clientX - cPx;
+                        const currentDistY = clientY - cPy;
                         const startDistX = this.state.view.dragStartX - cPx;
                         const startDistY = this.state.view.dragStartY - cPy;
                         
@@ -1308,16 +1339,15 @@ class CompassSurveyApp {
                             });
                         }
                         
-                        if (this.isMapMode) this.updateMapDrawing(false);
-                        else this.draw();
+                        this._updateLiveAnnotationDrawing();
                     }
                     return;
                 }
 
                 // 3. 移動処理 (isMovingAnnotation)
                 if (this.state.view.isMovingAnnotation && this.state.view.movingTarget && this.state.view.movingInitialState) {
-                    const dx = e.clientX - this.state.view.dragStartX;
-                    const dy = e.clientY - this.state.view.dragStartY;
+                    const dx = clientX - this.state.view.dragStartX;
+                    const dy = clientY - this.state.view.dragStartY;
                     
                     if (!this.state.view.dragMoved && (Math.abs(dx) > 2 || Math.abs(dy) > 2)) {
                         this.state.view.dragMoved = true;
@@ -1356,21 +1386,21 @@ class CompassSurveyApp {
                         this._updateLiveAnnotationDrawing();
                     }
 
-                    this.state.view.lastMouseX = e.clientX;
-                    this.state.view.lastMouseY = e.clientY;
+                    this.state.view.lastMouseX = clientX;
+                    this.state.view.lastMouseY = clientY;
                     return;
                 }
 
                 // 4. キャンバスパン移動処理
                 if (this.state.view.isRightDragging || this.state.view.isDragging) {
                     const isRight = this.state.view.isRightDragging;
-                    const dx = e.clientX - this.state.view.lastMouseX, dy = e.clientY - this.state.view.lastMouseY;
+                    const dx = clientX - this.state.view.lastMouseX, dy = clientY - this.state.view.lastMouseY;
                     const dragMovedKey = isRight ? 'rightDragMoved' : 'dragMoved';
-                    if (!this.state.view[dragMovedKey] && (Math.abs(e.clientX - this.state.view.dragStartX) > 5 || Math.abs(e.clientY - this.state.view.dragStartY) > 5)) {
+                    if (!this.state.view[dragMovedKey] && (Math.abs(clientX - this.state.view.dragStartX) > 5 || Math.abs(clientY - this.state.view.dragStartY) > 5)) {
                         this.state.view[dragMovedKey] = true; if (!isRight) document.body.classList.add('left-dragging');
                     }
                     if (this.state.view[dragMovedKey]) { this.state.view.offsetX += dx; this.state.view.offsetY += dy; this.draw(); }
-                    this.state.view.lastMouseX = e.clientX; this.state.view.lastMouseY = e.clientY;
+                    this.state.view.lastMouseX = clientX; this.state.view.lastMouseY = clientY;
                 }
 
                 // 5. ライン描画モード時のガイド線
@@ -1423,7 +1453,7 @@ class CompassSurveyApp {
                     for (let [name, node] of this.state.nodes) {
                         const px = offsetX + node.x * scale, py = offsetY - node.y * scale;
                         if (Math.sqrt(Math.pow(mX - px, 2) + Math.pow(mY - py, 2)) < this.CONFIG.canvas.hitRadius) { 
-                            hit = true; this.els.tooltip.style.opacity = 1; this.els.tooltip.style.left = `${e.clientX + 15}px`; this.els.tooltip.style.top = `${e.clientY + 15}px`;
+                            hit = true; this.els.tooltip.style.opacity = 1; this.els.tooltip.style.left = `${clientX + 15}px`; this.els.tooltip.style.top = `${clientY + 15}px`;
                             this.els.tooltip.innerHTML = `<strong>${name}</strong><br>X: ${node.x.toFixed(2)}m<br>Y: ${node.y.toFixed(2)}m<hr style="margin:4px 0;border-color:rgba(255,255,255,0.2);"><span style="color:#a7f3d0">Lat: ${(lat0 + node.y * CONSTANTS.LAT_DEG_PER_METER).toFixed(6)}<br>Lon: ${(lon0 + node.x * lonDPM).toFixed(6)}</span>`;
                             break;
                         }
