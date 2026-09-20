@@ -91,14 +91,14 @@ export const mapView = {
 
             if (isSel) {
                 highlightPolyline = L.polyline(coords, { color: '#3b82f6', weight: weight + 8, opacity: 0.4, interactive: false }).addTo(this.mapLayerGroup);
-                cLatLng = this._getRotLatLng({x: cx, y: cy}, cx, cy, rot);
+                const topEdgeLatLng = this._getRotLatLng({x: cx, y: maxY}, cx, cy, rot);
                 
                 const pxOffset = 20;
                 const internalOffset = this._getPixelsToInternalDistance(pxOffset);
                 handleInternalY = maxY + internalOffset;
                 
                 const topLatLng = this._getRotLatLng({x: cx, y: handleInternalY}, cx, cy, rot);
-                handleLine = L.polyline([cLatLng, topLatLng], { color: '#3b82f6', weight: 2, interactive: false }).addTo(this.mapLayerGroup);
+                handleLine = L.polyline([topEdgeLatLng, topLatLng], { color: '#3b82f6', weight: 2, interactive: false }).addTo(this.mapLayerGroup);
             }
 
             const polyline = L.polyline(coords, { color, weight, dashArray, opacity: 0.9, interactive: true, className: 'leaflet-interactive no-select-text' }).addTo(this.mapLayerGroup);
@@ -206,8 +206,9 @@ export const mapView = {
                 const internalOffset = this._getPixelsToInternalDistance(pxOffset);
                 const handleInternalY = cy + internalOffset;
                 
+                const topEdgeLatLng = this._getRotLatLng({x: cx, y: cy + this._getPixelsToInternalDistance(bs/2)}, cx, cy, t.rotation || 0);
                 const topLatLng = this._getRotLatLng({x: cx, y: handleInternalY}, cx, cy, t.rotation || 0);
-                handleLine = L.polyline([cLatLng, topLatLng], { color: '#3b82f6', weight: 2, interactive: false }).addTo(this.mapLayerGroup);
+                handleLine = L.polyline([topEdgeLatLng, topLatLng], { color: '#3b82f6', weight: 2, interactive: false }).addTo(this.mapLayerGroup);
                 hMarker = L.marker(topLatLng, { 
                     icon: L.divIcon({ className: 'map-rotate-handle', html: '<div style="width:12px;height:12px;background:#fff;border:2px solid #3b82f6;border-radius:50%;cursor:grab;margin:-6px 0 0 -6px;pointer-events:auto;"></div>', iconSize: [0, 0] }), 
                     draggable: false, 
