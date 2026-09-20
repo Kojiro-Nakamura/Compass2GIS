@@ -106,7 +106,8 @@ export const mapView = {
                 handleLine = L.polyline([topEdgeLatLng, topLatLng], { color: '#3b82f6', weight: 2, interactive: false }).addTo(this.mapLayerGroup);
             }
 
-            const polyline = L.polyline(coords, { color, weight, dashArray, opacity: 0.9, interactive: true, className: 'leaflet-interactive no-select-text' }).addTo(this.mapLayerGroup);
+            const polylineHit = L.polyline(coords, { color: 'transparent', weight: Math.max(20, weight + 15), interactive: true }).addTo(this.mapLayerGroup);
+            const polyline = L.polyline(coords, { color, weight, dashArray, opacity: 0.9, interactive: false, className: 'no-select-text' }).addTo(this.mapLayerGroup);
 
             if (isSel) {
                 const topLatLng = this._getRotLatLng({x: cx, y: handleInternalY}, cx, cy, rot);
@@ -144,17 +145,17 @@ export const mapView = {
                 });
             }
 
-            polyline.on('mouseover', () => {
+            polylineHit.on('mouseover', () => {
                 if (['select', 'erase'].includes(this.state.interactionMode)) {
                     document.body.classList.add('hovering-annotation');
                     if (!isSel) polyline.setStyle({ color: '#3b82f6', weight: weight + 4, opacity: 0.6 });
                 }
             });
-            polyline.on('mouseout', () => {
+            polylineHit.on('mouseout', () => {
                 document.body.classList.remove('hovering-annotation');
                 if (!isSel) polyline.setStyle({ color, weight, dashArray, opacity: 0.9 });
             });
-            polyline.on('mousedown', (e) => {
+            polylineHit.on('mousedown', (e) => {
                 if (this.state.interactionMode === 'select') {
                     L.DomEvent.stopPropagation(e);
                     L.DomEvent.preventDefault(e.originalEvent); // ネイティブドラッグを防止
@@ -192,8 +193,8 @@ export const mapView = {
                     this.state.view.dragMoved = false;
                 }
             });
-            polyline.on('click', (e) => { L.DomEvent.stopPropagation(e); if (this.state.interactionMode === 'erase') { this.state.annotations.lines.splice(i, 1); this.saveToLocalStorage(); this.pushState(); this._redrawAll(); } });
-            polyline.on('contextmenu', (e) => { if (this.state.interactionMode === 'line') { L.DomEvent.stopPropagation(e); this.finishCurrentLine(); } });
+            polylineHit.on('click', (e) => { L.DomEvent.stopPropagation(e); if (this.state.interactionMode === 'erase') { this.state.annotations.lines.splice(i, 1); this.saveToLocalStorage(); this.pushState(); this._redrawAll(); } });
+            polylineHit.on('contextmenu', (e) => { if (this.state.interactionMode === 'line') { L.DomEvent.stopPropagation(e); this.finishCurrentLine(); } });
         });
 
         (this.state.annotations?.texts || []).forEach((t, i) => {
