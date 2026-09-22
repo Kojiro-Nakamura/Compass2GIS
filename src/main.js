@@ -1,3 +1,6 @@
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+window.L = L;
 import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
 
         import { surveyMath } from './surveyMath.js';
