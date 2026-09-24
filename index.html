@@ -34,6 +34,7 @@
                 
                 <button id="btnExportGeoJSON" style="background-color: #664F82;">🌐 GeoJSON出力</button>
                 <button id="btnExportHTML" style="background-color: #217270; margin-left: 8px;">📄 平面図出力</button>
+                <button id="btnProfile" style="background-color: #B36A22; margin-left: 8px;">📈 縦断図を作成</button>
 
                 <div style="display: flex; align-items: center; gap: 5px; font-size: 0.85rem; color: #4b5563; margin-left: auto;">
                     <strong>🏷️ 測点名表示:</strong>
@@ -109,7 +110,7 @@
                 <table id="dataTable">
                     <thead>
                         <tr>
-                            <th style="width: 15%;">器械点</th><th style="width: 15%;">視準点</th>
+                            <th style="width: 5%;" title="縦断図に含める"><input type="checkbox" id="chkAllProfile" checked></th><th style="width: 15%;">器械点</th><th style="width: 15%;">視準点</th>
                             <th style="width: 15%;">方位角<br><span style="font-size:0.7em;font-weight:normal;">(度.分)</span></th>
                             <th style="width: 15%;">高低角<br><span style="font-size:0.7em;font-weight:normal;">(度.分)</span></th>
                             <th style="width: 15%;">斜距離<br><span style="font-size:0.7em;font-weight:normal;">(m)</span></th>

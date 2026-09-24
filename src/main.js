@@ -683,7 +683,7 @@ class CompassSurveyApp {
             renderTable() {
                 this.els.tbody.innerHTML = '';
                 this.state.tableData.forEach((row, i) => this.els.tbody.appendChild(this.createRow(row, i)));
-                this.els.tbody.appendChild(this.createRow(['', '', '', '', '', false], this.state.tableData.length));
+                this.els.tbody.appendChild(this.createRow(['', '', '', '', '', false, true], this.state.tableData.length));
                 this.updateUniqueNames();
             }
 
@@ -691,6 +691,20 @@ class CompassSurveyApp {
                 const tr = document.createElement('tr'); tr.dataset.index = index;
                 const ph = ['BP', '1', '45.30', '10.5', '12.34'];
                 
+                const isProfile = rowData[6] !== false;
+                if (rowData.length < 7) rowData[6] = isProfile;
+                
+                const tdProfile = document.createElement('td');
+                const chkProfile = document.createElement('input');
+                chkProfile.type = 'checkbox'; chkProfile.checked = isProfile;
+                chkProfile.title = '縦断図に含める';
+                chkProfile.addEventListener('change', (e) => {
+                    this.state.tableData[index][6] = e.target.checked;
+                    this.saveToLocalStorage();
+                });
+                tdProfile.appendChild(chkProfile);
+                tr.appendChild(tdProfile);
+
                 for (let i = 0; i < 5; i++) {
                     const td = document.createElement('td'); const inp = document.createElement('input');
                     inp.type = i < 2 ? 'text' : 'number'; if (i >= 2) inp.step = 'any';
@@ -709,7 +723,7 @@ class CompassSurveyApp {
 
                 const tdAction = document.createElement('td'); tdAction.className = 'action-col';
                 const btnIn = document.createElement('button'), btnDel = document.createElement('button');
-                btnIn.className = 'small'; btnIn.textContent = '＋'; btnIn.onclick = () => { this.state.tableData.splice(index + 1, 0, ['', '', '', '', '', false]); this.renderTable(); this.saveToLocalStorage(); this.pushState(); };
+                btnIn.className = 'small'; btnIn.textContent = '＋'; btnIn.onclick = () => { this.state.tableData.splice(index + 1, 0, ['', '', '', '', '', false, true]); this.renderTable(); this.saveToLocalStorage(); this.pushState(); };
                 btnDel.className = 'small danger'; btnDel.textContent = '－'; btnDel.onclick = () => { this.state.tableData.splice(index, 1); this.renderTable(); this.updateDrawing(); this.saveToLocalStorage(); this.pushState(); };
                 tdAction.appendChild(btnIn); tdAction.appendChild(btnDel); tr.appendChild(tdAction);
 
@@ -736,7 +750,7 @@ class CompassSurveyApp {
                     if (colIndex < 2) this.addDropdown(input, colIndex, index);
                 });
                 input.addEventListener('input', (e) => {
-                    if (index >= this.state.tableData.length) { this.state.tableData.push(['', '', '', '', '', false]); this.els.tbody.appendChild(this.createRow(['', '', '', '', '', false], this.state.tableData.length)); }
+                    if (index >= this.state.tableData.length) { this.state.tableData.push(['', '', '', '', '', false, true]); this.els.tbody.appendChild(this.createRow(['', '', '', '', '', false, true], this.state.tableData.length)); }
                     this.state.tableData[index][colIndex] = e.target.value;
                     if (colIndex < 2) { this.addDropdown(input, colIndex, index); this.updateUniqueNames(); this.validateRow(tr); }
                     this.updateDrawing();
@@ -856,7 +870,7 @@ class CompassSurveyApp {
                 rows.forEach(rowStr => {
                     const cells = rowStr.split('\t');
                     if (cells.length >= 2) {
-                        const newRow = ['', '', '', '', '', false]; 
+                        const newRow = ['', '', '', '', '', false, true]; 
                         for (let i = 0; i < Math.min(cells.length, 5); i++) {
                             let val = cells[i] ? cells[i].trim() : '';
                             if (val.startsWith('"') && val.endsWith('"')) val = val.slice(1, -1);
@@ -1011,8 +1025,8 @@ class CompassSurveyApp {
             applyDropdownSelection(input, colIndex, rowIndex, text, tr) {
                 input.value = text;
                 if (rowIndex >= this.state.tableData.length) {
-                    this.state.tableData.push(['', '', '', '', '', false]);
-                    this.els.tbody.appendChild(this.createRow(['', '', '', '', '', false], this.state.tableData.length));
+                    this.state.tableData.push(['', '', '', '', '', false, true]);
+                    this.els.tbody.appendChild(this.createRow(['', '', '', '', '', false, true], this.state.tableData.length));
                 }
                 this.state.tableData[rowIndex][colIndex] = text;
                 this.hideDropdown(); this.updateUniqueNames(); this.validateRow(tr); this.updateDrawing(); this.saveToLocalStorage(); this.pushState();
