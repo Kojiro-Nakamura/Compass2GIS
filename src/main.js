@@ -70,7 +70,7 @@ class CompassSurveyApp {
                     btnModeLine: $id('btnModeLine'), btnModeErase: $id('btnModeErase'), btnZoomFit: $id('btnZoomFit'),
                     btnLoadDemo: $id('btnLoadDemo'), btnClear: $id('btnClear'), btnPasteClipboard: $id('btnPasteClipboard'),
                     btnCopyClipboard: $id('btnCopyClipboard'), btnToggleMap: $id('btnToggleMap'), btnExportGeoJSON: $id('btnExportGeoJSON'),
-                    btnExportHTML: $id('btnExportHTML'), btnSaveJSON: $id('btnSaveJSON'), inputFileJSON: $id('inputFileJSON'),
+                    btnExportHTML: $id('btnExportHTML'), btnProfile: $id('btnProfile'), chkAllProfile: $id('chkAllProfile'), btnSaveJSON: $id('btnSaveJSON'), inputFileJSON: $id('inputFileJSON'),
                     btnUndo: $id('btnUndo'), btnRedo: $id('btnRedo'), chkCompassAdjustment: $id('chkCompassAdjustment'),
                     closureInfo: $id('closureInfo'), btnCopyClosureInfo: $id('btnCopyClosureInfo'),
                     inputLat: $id('inputLat'), inputLon: $id('inputLon'), inputDeclination: $id('inputDeclination'),
@@ -166,6 +166,26 @@ class CompassSurveyApp {
                 bindClick(this.els.btnSaveJSON, () => this.openExportModal('json'));
                 bindClick(this.els.btnExportGeoJSON, () => this.openExportModal('geojson'));
                 bindClick(this.els.btnExportHTML, () => this.openExportModal('html'));
+                if (this.els.btnProfile) {
+                    bindClick(this.els.btnProfile, () => {
+                        let tsv = '器械点\t視準点\t方位角\t高低角\t斜距離\n';
+                        for (const row of this.state.tableData) {
+                            if (row[0] && row[6] !== false && row[5] !== true) {
+                                tsv += `${row[0]}\t${row[1] || ''}\t${row[2] || '0'}\t${row[3] || '0'}\t${row[4] || '0'}\n`;
+                            }
+                        }
+                        localStorage.setItem('compassProfileData', tsv);
+                        window.open('profile.html', '_blank');
+                    });
+                }
+                if (this.els.chkAllProfile) {
+                    this.els.chkAllProfile.addEventListener('change', (e) => {
+                        const checked = e.target.checked;
+                        this.state.tableData.forEach(row => { row[6] = checked; });
+                        this.renderTable();
+                        this.saveToLocalStorage();
+                    });
+                }
                 
                 bindClick(this.els.btnPasteClipboard, () => this.openModal(this.els.pasteModal, this.els.pasteArea));
                 this.els.tbody.addEventListener('paste', (e) => this.handlePaste(e));
