@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>コンパス測量 縦断図作成ツール v1.0.6</title>
+    <title>コンパス測量 縦断図作成ツール v1.0.7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js"></script>
     <style>
@@ -37,7 +37,7 @@
 
 <div class="w-full px-2 lg:px-4 py-4 flex flex-col h-screen">
     <header class="mb-4">
-        <h1 class="text-2xl font-bold text-gray-900">コンパス測量 縦断図作成ツール v1.0.6</h1>
+        <h1 class="text-2xl font-bold text-gray-900">コンパス測量 縦断図作成ツール v1.0.7</h1>
         <p class="text-sm text-gray-600">縮尺・用紙サイズ対応 / DXF・HTML作図 (完全ベクター表示)</p>
     </header>
 
@@ -152,7 +152,7 @@
             <!-- プレビューエリア -->
             <div id="previewArea" class="flex-1 relative overflow-hidden flex flex-col">
                 <div class="canvas-container rounded border" id="svgContainer">
-                    <div id="svgTransformWrapper" style="transform-origin: 0 0; width: 100%; height: 100%;">
+                    <div id="svgTransformWrapper" style="transform-origin: 0 0; width: 100%; height: 100%; will-change: transform;">
                       <svg id="previewSvg" xmlns="http://www.w3.org/2000/svg">
                         <style>
                             text { font-family: 'Inter', sans-serif; }
@@ -725,20 +725,75 @@ function setupSvgInteractions() {
         applySvgTransform();
     }, { passive: false });
 
-    // ドラッグでパン
+    // タッチ＆マウス操作（パン＆ピンチズーム）
+    let activePointers = new Map();
+    let initialPinchDist = 0;
+    let initialPinchZoom = 1;
+    let initialPinchCenter = { x: 0, y: 0 };
+
     container.addEventListener('pointerdown', (e) => {
-        isDragging = true;
-        startDragX = e.clientX - translateX;
-        startDragY = e.clientY - translateY;
+        activePointers.set(e.pointerId, e);
+        if (activePointers.size === 2) {
+            isDragging = false;
+            isUserZoomed = true;
+            const pts = Array.from(activePointers.values());
+            initialPinchDist = Math.hypot(pts[0].clientX - pts[1].clientX, pts[0].clientY - pts[1].clientY);
+            initialPinchZoom = currentZoom;
+            const rect = container.getBoundingClientRect();
+            initialPinchCenter = {
+                x: ((pts[0].clientX + pts[1].clientX) / 2) - rect.left,
+                y: ((pts[0].clientY + pts[1].clientY) / 2) - rect.top
+            };
+        } else if (activePointers.size === 1) {
+            isDragging = true;
+            startDragX = e.clientX - translateX;
+            startDragY = e.clientY - translateY;
+        }
     });
+
     window.addEventListener('pointermove', (e) => {
-        if (!isDragging) return;
-        translateX = e.clientX - startDragX;
-        translateY = e.clientY - startDragY;
-        applySvgTransform();
-    });
-    window.addEventListener('pointerup', () => { isDragging = false; });
-    window.addEventListener('pointerleave', () => { isDragging = false; });
+        if (activePointers.has(e.pointerId)) {
+            activePointers.set(e.pointerId, e);
+        }
+        if (activePointers.size === 2) {
+            e.preventDefault(); // ピンチ中のスクロール防止
+            const pts = Array.from(activePointers.values());
+            const newDist = Math.hypot(pts[0].clientX - pts[1].clientX, pts[0].clientY - pts[1].clientY);
+            if (initialPinchDist > 0) {
+                const oldZoom = currentZoom;
+                currentZoom = initialPinchZoom * (newDist / initialPinchDist);
+                currentZoom = Math.max(0.0001, Math.min(currentZoom, 10000));
+                
+                translateX = initialPinchCenter.x - (initialPinchCenter.x - translateX) * (currentZoom / oldZoom);
+                translateY = initialPinchCenter.y - (initialPinchCenter.y - translateY) * (currentZoom / oldZoom);
+                applySvgTransform();
+            }
+        } else if (isDragging && activePointers.size === 1) {
+            e.preventDefault(); // ドラッグ中のスクロール防止
+            translateX = e.clientX - startDragX;
+            translateY = e.clientY - startDragY;
+            applySvgTransform();
+        }
+    }, { passive: false });
+
+    const handlePointerUp = (e) => {
+        activePointers.delete(e.pointerId);
+        if (activePointers.size < 2) {
+            initialPinchDist = 0;
+        }
+        if (activePointers.size === 1) {
+            const pt = Array.from(activePointers.values())[0];
+            startDragX = pt.clientX - translateX;
+            startDragY = pt.clientY - translateY;
+            isDragging = true;
+        } else if (activePointers.size === 0) {
+            isDragging = false;
+        }
+    };
+
+    window.addEventListener('pointerup', handlePointerUp);
+    window.addEventListener('pointercancel', handlePointerUp);
+    window.addEventListener('pointerleave', handlePointerUp);
 
     // ズームコントロールボタンの処理
     const doZoom = (factor) => {
@@ -794,10 +849,12 @@ function fitSvgToContainer() {
 }
 
 function applySvgTransform() {
+    if (isNaN(translateX) || isNaN(translateY) || isNaN(currentZoom)) return;
     const wrapper = document.getElementById('svgTransformWrapper');
-    wrapper.style.transform = `translate(${Number(translateX).toFixed(2)}px, ${Number(translateY).toFixed(2)}px) scale(${Number(currentZoom).toFixed(6)})`;
+    if (!wrapper) return;
+    const transformStr = `translate(${Number(translateX).toFixed(2)}px, ${Number(translateY).toFixed(2)}px) scale(${Number(currentZoom).toFixed(6)})`;
+    wrapper.style.transform = transformStr;
 }
-
 function generateDXF() {
     if (!drawingData) { customMessage("先に計算を実行してください。"); return; }
     const { results, graphElevBase, pw, ph, scaleH, scaleV, viewW, viewH } = drawingData;
