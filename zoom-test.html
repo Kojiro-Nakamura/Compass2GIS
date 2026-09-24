@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body, html { width: 100%; height: 100%; margin: 0; }
+  .canvas-container {
+    width: 800px;
+    height: 600px;
+    border: 1px solid red;
+    overflow: hidden;
+    position: relative;
+  }
+</style>
+</head>
+<body>
+  <div class="canvas-container" id="svgContainer">
+      <div id="svgTransformWrapper" style="transform-origin: 0 0; width: 100%; height: 100%; will-change: transform;">
+          <svg id="previewSvg" width="2000" height="1000" viewBox="0 0 2000 1000" style="overflow: visible; background: #eee;">
+              <rect x="0" y="0" width="2000" height="1000" fill="none" stroke="black" stroke-width="10"/>
+              <circle cx="1000" cy="500" r="100" fill="blue" />
+              <text x="1000" y="600" font-size="50" fill="red">Hello</text>
+          </svg>
+      </div>
+  </div>
+  <button id="btnZoomIn" style="font-size:20px;">Zoom In (+)</button>
+  <button id="btnZoomOut" style="font-size:20px;">Zoom Out (-)</button>
+  <div id="debug"></div>
+
+  <script>
+    let currentZoom = 0.38;
+    let translateX = 0;
+    let translateY = 0;
+    const container = document.getElementById('svgContainer');
+    const wrapper = document.getElementById('svgTransformWrapper');
+
+    function applySvgTransform() {
+      wrapper.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentZoom})`;
+      document.getElementById('debug').innerText = wrapper.style.transform;
+    }
+
+    applySvgTransform();
+
+    function doZoom(factor) {
+      const oldZoom = currentZoom;
+      currentZoom *= factor;
+      
+      const cWidth = container.clientWidth;
+      const cHeight = container.clientHeight;
+      const centerX = cWidth / 2;
+      const centerY = cHeight / 2;
+
+      translateX = centerX - (centerX - translateX) * (currentZoom / oldZoom);
+      translateY = centerY - (centerY - translateY) * (currentZoom / oldZoom);
+      applySvgTransform();
+    }
+
+    document.getElementById('btnZoomIn').addEventListener('click', () => doZoom(1.2));
+    document.getElementById('btnZoomOut').addEventListener('click', () => doZoom(1 / 1.2));
+
+    container.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const zoomFactor = 1.1;
+        const oldZoom = currentZoom;
+        if (e.deltaY < 0) currentZoom *= zoomFactor;
+        else currentZoom /= zoomFactor;
+        
+        const rect = container.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        translateX = mouseX - (mouseX - translateX) * (currentZoom / oldZoom);
+        translateY = mouseY - (mouseY - translateY) * (currentZoom / oldZoom);
+        applySvgTransform();
+    });
+  </script>
+</body>
+</html>

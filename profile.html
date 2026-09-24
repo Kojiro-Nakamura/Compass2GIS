@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>コンパス測量 縦断図作成ツール v1.0.7</title>
+    <title>コンパス測量 縦断図作成ツール v1.0.8</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js"></script>
     <style>
@@ -37,7 +37,7 @@
 
 <div class="w-full px-2 lg:px-4 py-4 flex flex-col h-screen">
     <header class="mb-4">
-        <h1 class="text-2xl font-bold text-gray-900">コンパス測量 縦断図作成ツール v1.0.7</h1>
+        <h1 class="text-2xl font-bold text-gray-900">コンパス測量 縦断図作成ツール v1.0.8</h1>
         <p class="text-sm text-gray-600">縮尺・用紙サイズ対応 / DXF・HTML作図 (完全ベクター表示)</p>
     </header>
 
@@ -151,7 +151,7 @@
 
             <!-- プレビューエリア -->
             <div id="previewArea" class="flex-1 relative overflow-hidden flex flex-col">
-                <div class="canvas-container rounded border" id="svgContainer">
+                <div class="canvas-container rounded border flex-1 w-full relative overflow-hidden" id="svgContainer">
                     <div id="svgTransformWrapper" style="transform-origin: 0 0; width: 100%; height: 100%; will-change: transform;">
                       <svg id="previewSvg" xmlns="http://www.w3.org/2000/svg">
                         <style>
@@ -345,10 +345,10 @@ function processData() {
 
         surveyData.push({
             pt: cols[0],
-            target: cols[1],
-            azi: parseFloat(cols[2]),
-            vAngle: parseFloat(cols[3]),
-            sDist: parseFloat(cols[4])
+            target: cols[1] || '',
+            azi: parseFloat(cols[2]) || 0,
+            vAngle: parseFloat(cols[3]) || 0,
+            sDist: parseFloat(cols[4]) || 0
         });
     }
 
