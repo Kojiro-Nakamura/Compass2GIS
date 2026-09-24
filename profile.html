@@ -1,232 +1,456 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>コンパス測量 縦断図作成ツール v1.0.9</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>コンパス測量 縦断図作成ツール v1.1.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-        .canvas-container {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #e5e7eb;
-            position: relative;
-            cursor: grab; touch-action: none;
-            user-select: none; /* ドラッグ中のテキスト選択を無効化 */
-        }
-        .canvas-container:active {
-            cursor: grabbing;
-        }
-        #previewSvg {
-            
-            /* will-change: transform; を削除しました。これでベクターとして再描画されます */
-        }
-        /* カスタムスクロールバー */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #555; }
-        /* モーダル背景 */
-        #dataModal { background-color: rgba(0, 0, 0, 0.5); }
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f3f4f6;
+      }
+      .canvas-container {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background-color: #e5e7eb;
+        position: relative;
+        cursor: grab;
+        touch-action: none;
+        user-select: none; /* ドラッグ中のテキスト選択を無効化 */
+      }
+      .canvas-container:active {
+        cursor: grabbing;
+      }
+      #previewSvg {
+        /* will-change: transform; を削除しました。これでベクターとして再描画されます */
+      }
+      /* カスタムスクロールバー */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+      /* モーダル背景 */
+      #dataModal {
+        background-color: rgba(0, 0, 0, 0.5);
+      }
     </style>
-</head>
-<body class="text-gray-800">
+  </head>
+  <body class="text-gray-800">
+    <div class="w-full px-2 lg:px-4 py-4 flex flex-col h-screen">
+      <header class="mb-4">
+        <h1 class="text-2xl font-bold text-gray-900">
+          コンパス測量 縦断図作成ツール v1.1.0
+        </h1>
+        <p class="text-sm text-gray-600">
+          縮尺・用紙サイズ対応 / DXF・HTML作図 (完全ベクター表示)
+        </p>
+      </header>
 
-<div class="w-full px-2 lg:px-4 py-4 flex flex-col h-screen">
-    <header class="mb-4">
-        <h1 class="text-2xl font-bold text-gray-900">コンパス測量 縦断図作成ツール v1.0.9</h1>
-        <p class="text-sm text-gray-600">縮尺・用紙サイズ対応 / DXF・HTML作図 (完全ベクター表示)</p>
-    </header>
-
-    <div class="flex flex-col lg:flex-row gap-4 flex-1 min-h-0">
+      <div class="flex flex-col lg:flex-row gap-4 flex-1 min-h-0">
         <!-- 左側：設定パネル -->
-        <div class="w-full lg:w-[450px] bg-white p-4 rounded shadow flex flex-col gap-4 overflow-y-auto shrink-0">
-            <h2 class="font-bold text-lg border-b pb-2">設定パネル</h2>
-            
-            <h2 class="font-bold text-lg border-b pb-2">測量データ</h2>
-            <div class="flex flex-col gap-2">
-                <button id="btnOpenModal" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded flex items-center justify-center gap-1 text-sm shadow">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    エクセル等からペースト
+        <div
+          class="w-full lg:w-[450px] bg-white p-4 rounded shadow flex flex-col gap-4 overflow-y-auto shrink-0"
+        >
+          <h2 class="font-bold text-lg border-b pb-2">設定パネル</h2>
+
+          <h2 class="font-bold text-lg border-b pb-2">測量データ</h2>
+          <div class="flex flex-col gap-2">
+            <button
+              id="btnOpenModal"
+              class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded flex items-center justify-center gap-1 text-sm shadow"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                ></path>
+              </svg>
+              エクセル等からペースト
+            </button>
+            <div class="border rounded overflow-x-auto shadow-sm">
+              <table
+                class="min-w-full text-xs text-center border-collapse editable-table"
+              >
+                <thead>
+                  <tr class="bg-gray-100 border-b">
+                    <th class="p-1 border-r font-medium">測点</th>
+                    <th class="p-1 border-r font-medium">ﾀｰｹﾞｯﾄ</th>
+                    <th class="p-1 border-r font-medium">方位角</th>
+                    <th class="p-1 border-r font-medium">高低角</th>
+                    <th class="p-1 border-r font-medium">斜距離</th>
+                    <th class="p-1 w-6"></th>
+                  </tr>
+                </thead>
+                <tbody id="editableTableBody"></tbody>
+              </table>
+              <div class="p-1 border-t text-center bg-gray-50">
+                <button
+                  id="btnAddRowTable"
+                  class="text-blue-600 hover:text-blue-800 text-xs font-semibold py-1 px-2"
+                >
+                  + 行を追加
                 </button>
-                <div class="border rounded overflow-x-auto shadow-sm">
-                    <table class="min-w-full text-xs text-center border-collapse editable-table">
-                        <thead>
-                            <tr class="bg-gray-100 border-b">
-                                <th class="p-1 border-r font-medium">測点</th>
-                                <th class="p-1 border-r font-medium">ﾀｰｹﾞｯﾄ</th>
-                                <th class="p-1 border-r font-medium">方位角</th>
-                                <th class="p-1 border-r font-medium">高低角</th>
-                                <th class="p-1 border-r font-medium">斜距離</th>
-                                <th class="p-1 w-6"></th>
-                            </tr>
-                        </thead>
-                        <tbody id="editableTableBody">
-                        </tbody>
-                    </table>
-                    <div class="p-1 border-t text-center bg-gray-50">
-                        <button id="btnAddRowTable" class="text-blue-600 hover:text-blue-800 text-xs font-semibold py-1 px-2">+ 行を追加</button>
-                    </div>
-                </div>
+              </div>
             </div>
-            <style>
-               .editable-table td { padding: 0; border-right: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; }
-               .editable-table input { width: 100%; box-sizing: border-box; padding: 4px; border: none; text-align: center; background: transparent; }
-               .editable-table input:focus { outline: 1px solid #2563eb; background: #fff; z-index: 10; position: relative; }
-               /* Remove number spinners */
-               .editable-table input[type="number"]::-webkit-inner-spin-button, 
-               .editable-table input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-            </style>
+          </div>
+          <style>
+            .editable-table td {
+              padding: 0;
+              border-right: 1px solid #e5e7eb;
+              border-bottom: 1px solid #e5e7eb;
+            }
+            .editable-table input {
+              width: 100%;
+              box-sizing: border-box;
+              padding: 4px;
+              border: none;
+              text-align: center;
+              background: transparent;
+            }
+            .editable-table input:focus {
+              outline: 1px solid #2563eb;
+              background: #fff;
+              z-index: 10;
+              position: relative;
+            }
+            /* Remove number spinners */
+            .editable-table input[type="number"]::-webkit-inner-spin-button,
+            .editable-table input[type="number"]::-webkit-outer-spin-button {
+              -webkit-appearance: none;
+              margin: 0;
+            }
+          </style>
 
-            <h2 class="font-bold text-lg border-b pb-2 mt-2">作図設定</h2>
-            
-            <div class="flex flex-col gap-2">
-                <label class="text-sm font-semibold">用紙サイズ</label>
-                <select id="paperSize" class="border rounded p-1">
-                    <option value="A4" data-w="297" data-h="210">A4 (297x210)</option>
-                    <option value="A3" data-w="420" data-h="297" selected>A3 (420x297)</option>
-                    <option value="A2" data-w="594" data-h="420">A2 (594x420)</option>
-                    <option value="A1" data-w="841" data-h="594">A1 (841x594)</option>
-                </select>
-            </div>
+          <h2 class="font-bold text-lg border-b pb-2 mt-2">作図設定</h2>
 
-            <div class="grid grid-cols-2 gap-2">
-                <div class="flex flex-col gap-1">
-                    <label class="text-sm font-semibold">横縮尺 (水平)</label>
-                    <div class="flex items-center gap-1">
-                        <span>1/</span><input type="number" id="scaleH" value="1000" class="border rounded p-1 w-full">
-                    </div>
-                </div>
-                <div class="flex flex-col gap-1">
-                    <label class="text-sm font-semibold">縦縮尺 (垂直)</label>
-                    <div class="flex items-center gap-1">
-                        <span>1/</span><input type="number" id="scaleV" value="1000" class="border rounded p-1 w-full">
-                    </div>
-                </div>
-            </div>
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-semibold">用紙サイズ</label>
+            <select id="paperSize" class="border rounded p-1">
+              <option value="A4" data-w="297" data-h="210">A4 (297x210)</option>
+              <option value="A3" data-w="420" data-h="297" selected>
+                A3 (420x297)
+              </option>
+              <option value="A2" data-w="594" data-h="420">A2 (594x420)</option>
+              <option value="A1" data-w="841" data-h="594">A1 (841x594)</option>
+            </select>
+          </div>
 
-            <div class="flex flex-col gap-2 mt-2">
-                <label class="text-sm font-semibold text-gray-700">基準点(BP)の標高 (m)</label>
-                <input type="number" id="baseElevation" value="1000.00" step="0.1" class="border rounded p-1">
+          <div class="grid grid-cols-2 gap-2">
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-semibold">横縮尺 (水平)</label>
+              <div class="flex items-center gap-1">
+                <span>1/</span
+                ><input
+                  type="number"
+                  id="scaleH"
+                  value="1000"
+                  class="border rounded p-1 w-full"
+                />
+              </div>
             </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-semibold">縦縮尺 (垂直)</label>
+              <div class="flex items-center gap-1">
+                <span>1/</span
+                ><input
+                  type="number"
+                  id="scaleV"
+                  value="1000"
+                  class="border rounded p-1 w-full"
+                />
+              </div>
+            </div>
+          </div>
 
-            <!-- 図面枠設定 -->
-            <h2 class="font-bold text-lg border-b pb-2 mt-4">図面枠 (右下)</h2>
-            <div class="grid grid-cols-2 gap-2">
-                <div class="flex flex-col gap-1">
-                    <label class="text-xs font-semibold">年度</label>
-                    <input type="text" id="attrYear" value="令和〇年度" class="border rounded p-1 text-sm">
-                </div>
-                <div class="flex flex-col gap-1">
-                    <label class="text-xs font-semibold">工事内容等</label>
-                    <input type="text" id="attrConstName" value="間伐-育成複層林整備" class="border rounded p-1 text-sm">
-                </div>
-                <div class="flex flex-col gap-1 col-span-2">
-                    <label class="text-xs font-semibold">名称</label>
-                    <input type="text" id="attrTitle" value="縦断図" class="border rounded p-1 text-sm">
-                </div>
-                <div class="flex flex-col gap-1 col-span-2">
-                    <label class="text-xs font-semibold">施工地</label>
-                    <input type="text" id="attrLocation" value="〇〇森林組合" class="border rounded p-1 text-sm">
-                </div>
-                <div class="flex flex-col gap-1 col-span-2">
-                    <label class="text-xs font-semibold">事業名</label>
-                    <input type="text" id="attrProject" value="〇〇事業" class="border rounded p-1 text-sm">
-                </div>
-                <div class="flex flex-col gap-1 col-span-2">
-                    <label class="text-xs font-semibold">事業所名</label>
-                    <input type="text" id="attrOffice" value="林務課" class="border rounded p-1 text-sm">
-                </div>
-                <div class="flex flex-col gap-1">
-                    <label class="text-xs font-semibold">図面番号</label>
-                    <input type="text" id="attrDrawNo" value="1 / 1" class="border rounded p-1 text-sm">
-                </div>
-                <div class="flex flex-col gap-1">
-                    <label class="text-xs font-semibold">縮尺</label>
-                    <input type="text" id="attrScaleText" value="1/1,000" class="border rounded p-1 text-sm">
-                </div>
-            </div>
+          <div class="flex flex-col gap-2 mt-2">
+            <label class="text-sm font-semibold text-gray-700"
+              >基準点(BP)の標高 (m)</label
+            >
+            <input
+              type="number"
+              id="baseElevation"
+              value="1000.00"
+              step="0.1"
+              class="border rounded p-1"
+            />
+          </div>
 
-            <div class="mt-auto pt-6 flex flex-col gap-2">
-                <button id="btnCalc" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
-                    計算・作図を実行
-                </button>
-                <button id="btnDxf" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                    DXFダウンロード
-                </button>
+          <!-- 図面枠設定 -->
+          <h2 class="font-bold text-lg border-b pb-2 mt-4">図面枠 (右下)</h2>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold">年度</label>
+              <input
+                type="text"
+                id="attrYear"
+                value="令和〇年度"
+                class="border rounded p-1 text-sm"
+              />
             </div>
-            
-            <div id="dxfWarning" class="hidden mt-2 p-2 bg-yellow-100 border border-yellow-400 text-yellow-800 text-xs rounded">
-                ※環境制限により文字コード変換がブロックされたため、UTF-8で出力しました。CADで文字化けする場合は、このHTMLファイルをPC上に保存してから実行してください。
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold">工事内容等</label>
+              <input
+                type="text"
+                id="attrConstName"
+                value="間伐-育成複層林整備"
+                class="border rounded p-1 text-sm"
+              />
             </div>
+            <div class="flex flex-col gap-1 col-span-2">
+              <label class="text-xs font-semibold">名称</label>
+              <input
+                type="text"
+                id="attrTitle"
+                value="縦断図"
+                class="border rounded p-1 text-sm"
+              />
+            </div>
+            <div class="flex flex-col gap-1 col-span-2">
+              <label class="text-xs font-semibold">施工地</label>
+              <input
+                type="text"
+                id="attrLocation"
+                value="〇〇森林組合"
+                class="border rounded p-1 text-sm"
+              />
+            </div>
+            <div class="flex flex-col gap-1 col-span-2">
+              <label class="text-xs font-semibold">事業名</label>
+              <input
+                type="text"
+                id="attrProject"
+                value="〇〇事業"
+                class="border rounded p-1 text-sm"
+              />
+            </div>
+            <div class="flex flex-col gap-1 col-span-2">
+              <label class="text-xs font-semibold">事業所名</label>
+              <input
+                type="text"
+                id="attrOffice"
+                value="林務課"
+                class="border rounded p-1 text-sm"
+              />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold">図面番号</label>
+              <input
+                type="text"
+                id="attrDrawNo"
+                value="1 / 1"
+                class="border rounded p-1 text-sm"
+              />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold">縮尺</label>
+              <input
+                type="text"
+                id="attrScaleText"
+                value="1/1,000"
+                class="border rounded p-1 text-sm"
+              />
+            </div>
+          </div>
+
+          <div class="mt-auto pt-6 flex flex-col gap-2">
+            <button
+              id="btnCalc"
+              class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded"
+            >
+              計算・作図を実行
+            </button>
+            <button
+              id="btnDxf"
+              class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+            >
+              DXFダウンロード
+            </button>
+          </div>
+
+          <div
+            id="dxfWarning"
+            class="hidden mt-2 p-2 bg-yellow-100 border border-yellow-400 text-yellow-800 text-xs rounded"
+          >
+            ※環境制限により文字コード変換がブロックされたため、UTF-8で出力しました。CADで文字化けする場合は、このHTMLファイルをPC上に保存してから実行してください。
+          </div>
         </div>
 
         <!-- 右側：プレビュー＆結果表示 -->
-        <div class="w-full flex-1 bg-white p-4 rounded shadow flex flex-col min-h-0 overflow-hidden">
-            <div class="flex justify-between items-center border-b pb-2 mb-2">
-                <div class="flex gap-2">
-                    <button id="tabPreview" class="px-4 py-1 bg-gray-200 rounded-t font-semibold">プレビュー</button>
-                    <button id="tabTable" class="px-4 py-1 text-gray-500 hover:bg-gray-100 rounded-t">計算結果表</button>
-                </div>
-                <div class="text-xs text-gray-500">
-                    マウスホイール: 拡大/縮小 | ドラッグ: 移動
-                </div>
+        <div
+          class="w-full flex-1 bg-white p-4 rounded shadow flex flex-col min-h-0 overflow-hidden"
+        >
+          <div class="flex justify-between items-center border-b pb-2 mb-2">
+            <div class="flex gap-2">
+              <button
+                id="tabPreview"
+                class="px-4 py-1 bg-gray-200 rounded-t font-semibold"
+              >
+                プレビュー
+              </button>
+              <button
+                id="tabTable"
+                class="px-4 py-1 text-gray-500 hover:bg-gray-100 rounded-t"
+              >
+                計算結果表
+              </button>
             </div>
+            <div class="text-xs text-gray-500">
+              マウスホイール: 拡大/縮小 | ドラッグ: 移動
+            </div>
+          </div>
 
-            <!-- プレビューエリア -->
-            <div id="previewArea" class="flex-1 relative overflow-hidden flex flex-col">
-                <div class="canvas-container rounded border flex-1 w-full relative overflow-hidden" id="svgContainer">
-                    <div id="svgTransformWrapper" style="transform-origin: 0 0; width: 100%; height: 100%; will-change: transform;">
-                      <svg id="previewSvg" xmlns="http://www.w3.org/2000/svg">
-                        <style>
-                            text { font-family: 'Inter', sans-serif; }
-                        </style>
-                        <!-- ここにベクター作図される -->
-                    </svg>
-                </div>
-                <!-- ズームコントロールボタン -->
-                <div class="absolute bottom-4 right-4 flex bg-white border border-gray-300 rounded shadow-sm z-10 overflow-hidden">
-                    <button id="btnZoomOut" class="w-8 h-8 flex items-center justify-center hover:bg-gray-100 text-gray-700 border-r border-gray-300" title="縮小">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
-                    </button>
-                    <button id="btnFit" class="w-8 h-8 flex items-center justify-center hover:bg-gray-100 text-gray-700 border-r border-gray-300" title="全体表示(フィット)">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
-                    </button>
-                    <button id="btnZoomIn" class="w-8 h-8 flex items-center justify-center hover:bg-gray-100 text-gray-700" title="拡大">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                    </button>
-                </div>
+          <!-- プレビューエリア -->
+          <div
+            id="previewArea"
+            class="flex-1 relative overflow-hidden flex flex-col"
+          >
+            <div
+              class="canvas-container rounded border flex-1 w-full relative overflow-hidden"
+              id="svgContainer"
+            >
+              <div
+                id="svgTransformWrapper"
+                style="
+                  transform-origin: 0 0;
+                  width: 100%;
+                  height: 100%;
+                  will-change: transform;
+                "
+              >
+                <svg id="previewSvg" xmlns="http://www.w3.org/2000/svg">
+                  <style>
+                    text {
+                      font-family: "Inter", sans-serif;
+                    }
+                  </style>
+                  <!-- ここにベクター作図される -->
+                </svg>
+              </div>
+              <!-- ズームコントロールボタン -->
+              <div
+                class="absolute bottom-4 right-4 flex bg-white border border-gray-300 rounded shadow-sm z-10 overflow-hidden"
+              >
+                <button
+                  id="btnZoomOut"
+                  class="w-8 h-8 flex items-center justify-center hover:bg-gray-100 text-gray-700 border-r border-gray-300"
+                  title="縮小"
+                >
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M20 12H4"
+                    ></path>
+                  </svg>
+                </button>
+                <button
+                  id="btnFit"
+                  class="w-8 h-8 flex items-center justify-center hover:bg-gray-100 text-gray-700 border-r border-gray-300"
+                  title="全体表示(フィット)"
+                >
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+                    ></path>
+                  </svg>
+                </button>
+                <button
+                  id="btnZoomIn"
+                  class="w-8 h-8 flex items-center justify-center hover:bg-gray-100 text-gray-700"
+                  title="拡大"
+                >
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 4v16m8-8H4"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
             </div>
 
             <!-- 計算結果テーブルエリア -->
             <div id="tableArea" class="flex-1 overflow-auto hidden">
-                <table class="w-full text-sm text-left whitespace-nowrap border-collapse">
-                    <thead class="bg-gray-100 sticky top-0">
-                        <tr>
-                            <th class="border p-2">測点</th>
-                            <th class="border p-2">水平距離</th>
-                            <th class="border p-2">追加水平</th>
-                            <th class="border p-2">垂直距離</th>
-                            <th class="border p-2">標高</th>
-                            <th class="border p-2">勾配(%)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="resultTableBody"></tbody>
-                </table>
+              <table
+                class="w-full text-sm text-left whitespace-nowrap border-collapse"
+              >
+                <thead class="bg-gray-100 sticky top-0">
+                  <tr>
+                    <th class="border p-2">測点</th>
+                    <th class="border p-2">水平距離</th>
+                    <th class="border p-2">追加水平</th>
+                    <th class="border p-2">垂直距離</th>
+                    <th class="border p-2">標高</th>
+                    <th class="border p-2">勾配(%)</th>
+                  </tr>
+                </thead>
+                <tbody id="resultTableBody"></tbody>
+              </table>
             </div>
+          </div>
         </div>
+      </div>
     </div>
-</div>
 
-<!-- データ入力モーダル -->
-<div id="dataModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
-    <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-3xl flex flex-col" style="height: 80vh;">
+    <!-- データ入力モーダル -->
+    <div
+      id="dataModal"
+      class="fixed inset-0 z-50 flex items-center justify-center hidden"
+    >
+      <div
+        class="bg-white p-6 rounded-lg shadow-xl w-full max-w-3xl flex flex-col"
+        style="height: 80vh"
+      >
         <h2 class="text-xl font-bold mb-4">測量データの入力</h2>
-        <p class="text-xs text-gray-600 mb-2">Excelなどから「測点, ターゲット, 方位角, 高低角, 斜距離」の5列をコピー＆ペーストしてください。（タブ区切り）</p>
-        <textarea id="rawData" class="flex-1 border border-gray-300 rounded p-2 text-sm font-mono whitespace-pre w-full resize-none">
+        <p class="text-xs text-gray-600 mb-2">
+          Excelなどから「測点, ターゲット, 方位角, 高低角,
+          斜距離」の5列をコピー＆ペーストしてください。（タブ区切り）
+        </p>
+        <textarea
+          id="rawData"
+          class="flex-1 border border-gray-300 rounded p-2 text-sm font-mono whitespace-pre w-full resize-none"
+        >
 測点	ターゲット	方位角	高低角	斜距離
 BP	1	33	-38	45.3
 1	2	122	35	50.7
@@ -241,1011 +465,22 @@ BP	1	33	-38	45.3
 10	11	181	32	16.7
 11	E.P	247	-7	14.5</textarea>
         <div class="mt-4 flex justify-end gap-2">
-            <button id="btnCancelModal" class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">キャンセル</button>
-            <button id="btnApplyModal" class="px-4 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-700">適用して再計算</button>
+          <button
+            id="btnCancelModal"
+            class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+          >
+            キャンセル
+          </button>
+          <button
+            id="btnApplyModal"
+            class="px-4 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-700"
+          >
+            適用して再計算
+          </button>
         </div>
+      </div>
     </div>
-</div>
 
-<script>
-let surveyData = [];
-let results = [];
-let drawingData = null; 
-
-// SVGパン・ズーム用変数
-let currentZoom = 1;
-let translateX = 0;
-let translateY = 0;
-let isDragging = false;
-let startDragX = 0;
-let startDragY = 0;
-let isUserZoomed = false; // ユーザーが手動でズームしたか
-
-// 数値をカンマ区切りにするヘルパー関数
-function formatNum(num, dec = 2) {
-    return Number(num).toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
-}
-
-window.onload = () => {
-    const savedData = localStorage.getItem('compassProfileData');
-    if (savedData) {
-        document.getElementById('rawData').value = savedData;
-        localStorage.removeItem('compassProfileData');
-    }
-    setupUI();
-    setupSvgInteractions();
-    setTimeout(() => processData(), 100);
-};
-
-function setupUI() {
-    // タブ切り替え
-    const tabPreview = document.getElementById('tabPreview');
-    const tabTable = document.getElementById('tabTable');
-    const previewArea = document.getElementById('previewArea');
-    const tableArea = document.getElementById('tableArea');
-
-    tabPreview.addEventListener('click', () => {
-        tabPreview.classList.replace('text-gray-500', 'bg-gray-200');
-        tabPreview.classList.add('font-semibold');
-        tabPreview.classList.remove('hover:bg-gray-100');
-        tabTable.classList.replace('bg-gray-200', 'text-gray-500');
-        tabTable.classList.remove('font-semibold');
-        tabTable.classList.add('hover:bg-gray-100');
-        previewArea.classList.remove('hidden'); tableArea.classList.add('hidden');
-    });
-
-    tabTable.addEventListener('click', () => {
-        tabTable.classList.replace('text-gray-500', 'bg-gray-200');
-        tabTable.classList.add('font-semibold');
-        tabTable.classList.remove('hover:bg-gray-100');
-        tabPreview.classList.replace('bg-gray-200', 'text-gray-500');
-        tabPreview.classList.remove('font-semibold');
-        tabPreview.classList.add('hover:bg-gray-100');
-        tableArea.classList.remove('hidden'); previewArea.classList.add('hidden');
-    });
-
-    // モーダル操作
-    const modal = document.getElementById('dataModal');
-    const inputTextArea = document.getElementById('rawData');
-    let tempData = '';
-
-    document.getElementById('btnOpenModal').addEventListener('click', () => {
-        tempData = inputTextArea.value;
-        modal.classList.remove('hidden');
-    });
-    document.getElementById('btnCancelModal').addEventListener('click', () => {
-        inputTextArea.value = tempData;
-        modal.classList.add('hidden');
-    });
-    document.getElementById('btnApplyModal').addEventListener('click', () => {
-        modal.classList.add('hidden');
-        isUserZoomed = false; 
-        renderEditableTable(); // Update table from pasted data
-        processData();
-    });
-
-    document.getElementById('btnAddRowTable').addEventListener('click', () => {
-        addEditableRow(document.getElementById('editableTableBody'), {pt:'', target:'', azi:'', vAngle:'', sDist:''});
-        syncTableToRaw();
-    });
-
-    // 各種ボタン・入力変更イベント (自動更新)
-    document.getElementById('btnCalc').addEventListener('click', processData);
-    document.getElementById('btnDxf').addEventListener('click', generateDXF);
-    
-    // 設定値が変更されたら即座に再計算・再描画
-    document.getElementById('baseElevation').addEventListener('change', processData);
-    document.getElementById('scaleH').addEventListener('change', processData);
-    document.getElementById('scaleV').addEventListener('change', processData);
-    document.getElementById('paperSize').addEventListener('change', () => { 
-        isUserZoomed = false; // 用紙サイズ変更時はフィットさせ直す
-        processData(); 
-    });
-
-    // 属性表の入力イベント
-    const attrIds = ['attrYear', 'attrConstName', 'attrTitle', 'attrLocation', 'attrProject', 'attrOffice', 'attrDrawNo', 'attrScaleText'];
-    renderEditableTable();
-    attrIds.forEach(id => {
-        document.getElementById(id).addEventListener('input', processData);
-    });
-
-    // 縮尺自動更新ロジック
-    const updateScaleText = () => {
-        const sh = document.getElementById('scaleH').value;
-        const sv = document.getElementById('scaleV').value;
-        const scaleTextEl = document.getElementById('attrScaleText');
-        if (sh === sv) {
-            scaleTextEl.value = `1/${Number(sh).toLocaleString()}`;
-        } else {
-            scaleTextEl.value = `横1/${Number(sh).toLocaleString()} 縦1/${Number(sv).toLocaleString()}`;
-        }
-        processData();
-    };
-    document.getElementById('scaleH').addEventListener('change', updateScaleText);
-    document.getElementById('scaleV').addEventListener('change', updateScaleText);
-    updateScaleText(); // 初期実行
-}
-
-function renderEditableTable() {
-    const rawText = document.getElementById('rawData').value;
-    const lines = rawText.trim().split('\n');
-    const tbody = document.getElementById('editableTableBody');
-    if(!tbody) return;
-    tbody.innerHTML = '';
-    
-    let data = [];
-    for (let i = 0; i < lines.length; i++) {
-        const cols = lines[i].split('\t').map(c => c.trim());
-        if (i === 0 && (cols[0] === '器械点' || cols[0] === '測点')) continue;
-        if (cols.length < 2 && cols.join('') === '') continue; 
-        data.push({
-            pt: cols[0] || '',
-            target: cols[1] || '',
-            azi: cols[2] || '',
-            vAngle: cols[3] || '',
-            sDist: cols[4] || ''
-        });
-    }
-    
-    if (data.length === 0) {
-        data.push({pt:'', target:'', azi:'', vAngle:'', sDist:''});
-    }
-
-    data.forEach((row, idx) => addEditableRow(tbody, row));
-}
-
-function syncTableToRaw() {
-    const tbody = document.getElementById('editableTableBody');
-    if(!tbody) return;
-    let tsv = '器械点\t視準点\t方位角\t高低角\t斜距離\n';
-    Array.from(tbody.children).forEach(tr => {
-        const inputs = tr.querySelectorAll('input');
-        if (inputs.length === 5) {
-            tsv += Array.from(inputs).map(inp => inp.value).join('\t') + '\n';
-        }
-    });
-    document.getElementById('rawData').value = tsv;
-    processData();
-}
-
-function handleTableKeydown(e, tr, tbody) {
-    const inputs = Array.from(tbody.querySelectorAll('input'));
-    const idx = inputs.indexOf(e.target);
-    if (idx === -1) return;
-    
-    if (e.key === 'ArrowRight') {
-        if (idx + 1 < inputs.length) inputs[idx + 1].focus();
-    } else if (e.key === 'ArrowLeft') {
-        if (idx - 1 >= 0) inputs[idx - 1].focus();
-    } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
-        if (idx + 5 < inputs.length) {
-            inputs[idx + 5].focus();
-        } else if (e.key === 'Enter') {
-            document.getElementById('btnAddRowTable').click();
-            setTimeout(() => {
-                const newInputs = Array.from(tbody.querySelectorAll('input'));
-                if (idx + 5 < newInputs.length) newInputs[idx + 5].focus();
-            }, 10);
-        }
-    } else if (e.key === 'ArrowUp') {
-        if (idx - 5 >= 0) inputs[idx - 5].focus();
-    }
-}
-
-function addEditableRow(tbody, row, insertBeforeTr = null) {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-        <td><input type="text" value="${row.pt}"></td>
-        <td><input type="text" value="${row.target}"></td>
-        <td><input type="text" value="${row.azi}"></td>
-        <td><input type="text" value="${row.vAngle}"></td>
-        <td><input type="text" value="${row.sDist}"></td>
-        <td class="w-12"><div class="flex items-center justify-center">
-            <button class="text-green-500 hover:text-green-700 font-bold px-1 ins-btn cursor-pointer" title="下に挿入">+</button>
-            <button class="text-red-500 hover:text-red-700 font-bold px-1 del-btn cursor-pointer" title="削除">×</button>
-        </div></td>
-    `;
-    const inputs = tr.querySelectorAll('input');
-    inputs.forEach(inp => {
-        inp.addEventListener('input', () => syncTableToRaw());
-        inp.addEventListener('keydown', (e) => handleTableKeydown(e, tr, tbody));
-    });
-    tr.querySelector('.del-btn').addEventListener('click', () => {
-        tr.remove();
-        syncTableToRaw();
-    });
-    tr.querySelector('.ins-btn').addEventListener('click', () => {
-        addEditableRow(tbody, {pt:'', target:'', azi:'', vAngle:'', sDist:''}, tr.nextSibling);
-        syncTableToRaw();
-    });
-    if (insertBeforeTr) {
-        tbody.insertBefore(tr, insertBeforeTr);
-    } else {
-        tbody.appendChild(tr);
-    }
-}
-
-function processData() {
-    const rawText = document.getElementById('rawData').value;
-    const lines = rawText.trim().split('\n');
-    surveyData = [];
-
-    // Parse Data
-    for (let i = 0; i < lines.length; i++) {
-        const cols = lines[i].split('\t').map(c => c.trim());
-        if (cols.length < 5) continue;
-        if (i === 0 && isNaN(parseFloat(cols[2]))) continue; // header skip
-
-        surveyData.push({
-            pt: cols[0],
-            target: cols[1] || '',
-            azi: parseFloat(cols[2]) || 0,
-            vAngle: parseFloat(cols[3]) || 0,
-            sDist: parseFloat(cols[4]) || 0
-        });
-    }
-
-    if (surveyData.length === 0) return;
-    calculateProfile();
-    updateTable();
-    drawVectorPreview();
-}
-
-function calculateProfile() {
-    results = [];
-    let currentElev = parseFloat(document.getElementById('baseElevation').value) || 0;
-    let currentDist = 0;
-    let minElev = currentElev;
-
-    results.push({
-        pt: surveyData[0].pt,
-        hDist: 0.00,
-        cDist: 0.00,
-        vDist: 0.00,
-        cvDist: 0.00,
-        grad: 0.0,
-        elev: currentElev
-    });
-
-    let cvDist = 0;
-
-    for (let i = 0; i < surveyData.length; i++) {
-        const d = surveyData[i];
-        
-        const vRad = d.vAngle * (Math.PI / 180);
-        const hDist = d.sDist * Math.cos(vRad);
-        const vDist = d.sDist * Math.sin(vRad);
-        
-        currentDist += hDist;
-        cvDist += vDist;
-        currentElev += vDist;
-
-        if(currentElev < minElev) minElev = currentElev;
-
-        const grad = (hDist === 0) ? 0 : (vDist / hDist) * 100;
-
-        results.push({
-            pt: d.target,
-            hDist: hDist,
-            cDist: currentDist,
-            vDist: vDist,
-            cvDist: cvDist,
-            grad: grad,
-            elev: currentElev
-        });
-    }
-
-    // グラフの基準標高 (一番低い標高から20m下げた切りの良い数字)
-    const graphElevBase = Math.floor(minElev / 5) * 5 - 20;
-
-    const paperSelect = document.getElementById('paperSize');
-    const paperOpt = paperSelect.options[paperSelect.selectedIndex];
-    const pw = parseFloat(paperOpt.getAttribute('data-w'));
-    const ph = parseFloat(paperOpt.getAttribute('data-h'));
-    const scaleH = parseFloat(document.getElementById('scaleH').value);
-    const scaleV = parseFloat(document.getElementById('scaleV').value);
-
-    // 属性表データの取得
-    const attrData = {
-        year: document.getElementById('attrYear').value,
-        constName: document.getElementById('attrConstName').value,
-        title: document.getElementById('attrTitle').value,
-        location: document.getElementById('attrLocation').value,
-        project: document.getElementById('attrProject').value,
-        office: document.getElementById('attrOffice').value,
-        drawNo: document.getElementById('attrDrawNo').value,
-        scaleText: document.getElementById('attrScaleText').value,
-    };
-
-    // --- はみ出し判定とプレビュー表示領域(viewBox)の計算 ---
-    const pitch = 12; 
-    const numBands = 5; // (項目数)
-    const marginX = 12;
-    const labelBoxW = 35;
-    const colGap = 2;
-    const dataBoxX = 20 + labelBoxW + colGap;
-    const startX = dataBoxX + marginX; 
-    
-    // X方向の最大幅 (グラフ終端)
-    const totalDistCAD = (results[results.length - 1].cDist * 1000) / scaleH;
-    const maxDrawX = startX + totalDistCAD + 20; 
-
-    // Y方向の最小値 (上へはみ出すか)
-    let minDrawY = 0;
-    const graphBaseY = ph - 30 - (numBands * pitch) - 5;
-    results.forEach(r => {
-        const cy = graphBaseY - ((r.elev - graphElevBase) * 1000) / scaleV;
-        if (cy < minDrawY) minDrawY = cy;
-    });
-
-    const isOverflow = (maxDrawX > pw || minDrawY < 0);
-    if (isOverflow) {
-        customMessage("図面が用紙サイズからはみ出しています（プレビューでスクロール確認可能）");
-    }
-
-    // プレビュー表示用(viewBox)の範囲を拡張する（緑枠自体はpw, phのまま）
-    const viewX = Math.min(0, -20);
-    const viewY = Math.min(0, minDrawY - 20);
-    const viewW = Math.max(pw, maxDrawX) - viewX + 20;
-    const viewH = Math.max(ph, ph) - viewY + 20;
-
-    drawingData = {
-        results, graphElevBase, pw, ph, scaleH, scaleV, attrData,
-        viewX, viewY, viewW, viewH
-    };
-}
-
-function updateTable() {
-    const tbody = document.getElementById('resultTableBody');
-    tbody.innerHTML = '';
-    results.forEach(r => {
-        const tr = document.createElement('tr');
-        tr.className = "border-b hover:bg-gray-50";
-        tr.innerHTML = `
-            <td class="p-2 border-r font-medium">${r.pt}</td>
-            <td class="p-2 border-r text-right">${formatNum(r.hDist)}</td>
-            <td class="p-2 border-r text-right">${formatNum(r.cDist)}</td>
-            <td class="p-2 border-r text-right">${formatNum(r.vDist)}</td>
-            <td class="p-2 border-r text-right text-blue-600 font-bold">${formatNum(r.elev)}</td>
-            <td class="p-2 text-right">${formatNum(r.grad, 1)}</td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
-function drawVectorPreview() {
-    if (!drawingData) return;
-    const { results, graphElevBase, pw, ph, scaleH, scaleV, viewX, viewY, viewW, viewH } = drawingData;
-
-    const svg = document.getElementById('previewSvg');
-    
-    // キャンバスのサイズを実際の描画範囲(viewBox)に設定して、はみ出し部分も表示
-    svg.setAttribute('width', viewW);
-    svg.setAttribute('height', viewH);
-    svg.setAttribute('viewBox', `${viewX} ${viewY} ${viewW} ${viewH}`);
-    svg.style.overflow = "visible";
-    
-    // 初期化
-    svg.innerHTML = `<style>
-        text { font-family: 'Inter', sans-serif; }
-    </style>`;
-    
-    let svgContent = '';
-
-    // ヘルパー関数群
-    const addLine = (x1, y1, x2, y2, opt = "") => {
-        svgContent += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#000" stroke-width="0.2" ${opt} />`;
-    };
-    const addText = (text, x, y, size, align="start", baseline="alphabetic", rot=0) => {
-        let transform = rot ? `transform="rotate(${rot}, ${x}, ${y})"` : "";
-        svgContent += `<text x="${x}" y="${y}" font-size="${size}" text-anchor="${align}" dominant-baseline="${baseline}" ${transform}>${text}</text>`;
-    };
-    const addCircle = (x, y, r, stroke, fill, width) => {
-        svgContent += `<circle cx="${x}" cy="${y}" r="${r}" stroke="${stroke}" fill="${fill}" stroke-width="${width}"/>`;
-    };
-    const addRect = (x, y, w, h, opt = 'fill="none" stroke="#000" stroke-width="0.3"') => {
-        svgContent += `<rect x="${x}" y="${y}" width="${w}" height="${h}" ${opt} />`;
-    };
-
-    // 用紙の枠
-    addRect(0, 0, pw, ph, 'fill="#ffffff" stroke="#000000" stroke-width="0.5"');
-
-    // 帯表の寸法とレイアウト（DXFと統一）
-    const pitch = 12; 
-    const boxHeight = 10; 
-    const numBands = 6;
-    const bandLabels = [ "測　点　名", "水 平 距 離", "追加水平距離", "垂 直 距 離", "追加垂直距離", "勾　　　配" ];
-
-    const marginX = 12;
-    const labelBoxW = 35;
-    const colGap = 2;
-    const dataBoxX = 20 + labelBoxW + colGap;
-    const startX = dataBoxX + marginX; 
-    
-    // グラフ基準位置 (DL線の位置)
-    const graphBaseY = ph - 30 - (numBands * pitch) - 5;
-
-    // 終点の計算
-    const totalDistCAD = (results[results.length - 1].cDist * 1000) / scaleH;
-    const endX = startX + totalDistCAD;
-    const tableEndX = endX + marginX; 
-
-    // DL線とテキスト
-    addLine(20, graphBaseY, tableEndX, graphBaseY);
-    addText(`DL = ${formatNum(graphElevBase)}`, 20, graphBaseY - 2, 4);
-
-    // 帯表の箱描画
-    for (let i = 0; i < numBands; i++) {
-        // SVGはY軸が下向きなので加算
-        const yTop = graphBaseY + 3 + i * pitch + 1;
-        
-        // 項目名箱
-        addRect(20, yTop, labelBoxW, boxHeight);
-        addText(bandLabels[i], 20 + labelBoxW/2, yTop + boxHeight/2, 4, "middle", "central");
-        
-        // データ箱
-        addRect(dataBoxX, yTop, tableEndX - dataBoxX, boxHeight);
-    }
-
-    // 縦軸スケールと目盛り
-    let maxElev = graphElevBase;
-    results.forEach(r => { if(r.elev > maxElev) maxElev = r.elev; });
-    let scaleTopElev = Math.ceil(maxElev / 10) * 10 + 10;
-    if (scaleTopElev - maxElev < 5) scaleTopElev += 10;
-
-    const scaleTopY = graphBaseY - ((scaleTopElev - graphElevBase) * 1000) / scaleV;
-    addLine(dataBoxX, graphBaseY, dataBoxX, scaleTopY); // 縦線
-
-    for (let e = graphElevBase; e <= scaleTopElev; e += 2) {
-        const y = graphBaseY - ((e - graphElevBase) * 1000) / scaleV;
-        const is10m = (Math.abs(e % 10) < 0.01);
-        const tickLen = is10m ? 4 : 2;
-        addLine(dataBoxX, y, dataBoxX - tickLen, y);
-        if (is10m && e > graphElevBase) {
-            addText(formatNum(e), dataBoxX - tickLen - 1.5, y, 3.5, "end", "central");
-        }
-    }
-
-    // SCALE 三角形 (左端をテーブル左端 x=20 に合わせる)
-    const triW = 20;
-    const triH = 15;
-    const triX1 = 20; // 帯表の左端に揃える
-    const triX2 = triX1 + triW; 
-    const triY2 = graphBaseY - 15; // DL線の少し上
-    const triY1 = triY2 - triH; 
-
-    addLine(triX1, triY2, triX2, triY1);
-    addLine(triX2, triY1, triX2, triY2);
-    addLine(triX2, triY2, triX1, triY2);
-
-    const midX = (triX1 + triX2) / 2;
-    const midY = (triY1 + triY2) / 2;
-    const angRad = Math.atan2(triH, triW);
-    // SVGの回転は時計回りが正のためマイナスにする
-    const angDeg = -(angRad * 180 / Math.PI); 
-
-    // 斜辺からの法線ベクトル（文字を浮かすため）
-    const nx = -Math.sin(angRad) * 2;
-    const ny = -Math.cos(angRad) * 2;
-
-    addText("S C A L E", midX + nx, midY + ny, 3, "middle", "central", angDeg);
-    addText(`1:${scaleH.toLocaleString()}`, triX1 + triW/2, triY2 + 3.5, 3, "middle", "central");
-    addText(`1:${scaleV.toLocaleString()}`, triX2 + 2, triY1 + triH/2, 3, "start", "central", -90);
-
-    // --- 属性表（図面枠）の描画 ---
-    const { attrData } = drawingData;
-    const topMargin = 15;
-    const tbW = 120;
-    const rowH = 10;
-    const tbH = rowH * 6;
-    // 縦軸スケール(dataBoxX)の少し右、上部からtopMarginの位置に配置
-    const tX = dataBoxX + 15;
-    const tY = topMargin;
-
-    // 外枠と横線
-    for (let i = 0; i <= 6; i++) {
-        addLine(tX, tY + i * rowH, tX + tbW, tY + i * rowH, 'stroke-width="0.3"');
-    }
-    // 縦線
-    addLine(tX, tY, tX, tY + tbH, 'stroke-width="0.3"');
-    addLine(tX + 25, tY, tX + 25, tY + tbH, 'stroke-width="0.3"');
-    addLine(tX + tbW, tY, tX + tbW, tY + tbH, 'stroke-width="0.3"');
-    
-    // 1行目と6行目の追加縦線
-    addLine(tX + 60, tY, tX + 60, tY + rowH, 'stroke-width="0.3"');
-    addLine(tX + 80, tY, tX + 80, tY + rowH, 'stroke-width="0.3"');
-    addLine(tX + 60, tY + 5 * rowH, tX + 60, tY + 6 * rowH, 'stroke-width="0.3"');
-    addLine(tX + 80, tY + 5 * rowH, tX + 80, tY + 6 * rowH, 'stroke-width="0.3"');
-
-    // テキスト描画ヘルパー
-    const addTbText = (txt, cx, cy, size=4) => {
-        addText(txt, cx, cy, size, "middle", "central");
-    };
-    const addTbVal = (txt, x, cy, size=4) => {
-        addText(txt, x, cy, size, "start", "central");
-    };
-
-    // 項目名
-    addTbText("年　　度", tX + 12.5, tY + rowH * 0.5);
-    addTbText("名　　称", tX + 12.5, tY + rowH * 1.5);
-    addTbText("施 工 地", tX + 12.5, tY + rowH * 2.5);
-    addTbText("事 業 名", tX + 12.5, tY + rowH * 3.5);
-    addTbText("事業所名", tX + 12.5, tY + rowH * 4.5);
-    addTbText("図面番号", tX + 12.5, tY + rowH * 5.5);
-
-    addTbText("工事番号", tX + 70, tY + rowH * 0.5, 2.5);
-    addTbText("縮　　尺", tX + 70, tY + rowH * 5.5, 3.5);
-
-    // データ値
-    addTbVal(attrData.year, tX + 28, tY + rowH * 0.5);
-    addTbVal(attrData.constName, tX + 82, tY + rowH * 0.5, 3);
-    addTbVal(attrData.title, tX + 28, tY + rowH * 1.5);
-    addTbVal(attrData.location, tX + 28, tY + rowH * 2.5);
-    addTbVal(attrData.project, tX + 28, tY + rowH * 3.5);
-    addTbVal(attrData.office, tX + 28, tY + rowH * 4.5);
-    addTbVal(attrData.drawNo, tX + 28, tY + rowH * 5.5);
-    addTbVal(attrData.scaleText, tX + 82, tY + rowH * 5.5, 3);
-
-    // Draw Graph & Ticks
-    let prevPoint = null;
-    const tickLen = 0.5;
-    
-    results.forEach((res, i) => {
-        // CAD座標への変換
-        const cx = startX + (res.cDist * 1000) / scaleH;
-        const cy = graphBaseY - ((res.elev - graphElevBase) * 1000) / scaleV;
-        
-        // グラフ部分の縦線（点からDL線へ下ろす線）
-        addLine(cx, cy, cx, graphBaseY, 'stroke-dasharray="none" stroke-width="0.1"');
-
-        // 帯部分の交差線（ティック）
-        for(let j=0; j<numBands; j++) {
-            const yTop = graphBaseY + 3 + j * pitch + 1;
-            const yBot = yTop + boxHeight;
-            addLine(cx, yTop - tickLen, cx, yTop + tickLen, 'stroke-width="0.3"');
-            addLine(cx, yBot - tickLen, cx, yBot + tickLen, 'stroke-width="0.3"');
-        }
-
-        // グラフの折れ線
-        if (prevPoint) {
-            addLine(prevPoint.x, prevPoint.y, cx, cy, 'stroke="#2563eb" stroke-width="0.5"');
-        }
-        
-        // --- Data Texts (Rotated -90 deg) ---
-        const tSize = 2.5; // 文字サイズを小さく調整
-        const tOpt = -90; 
-        
-        addText(res.pt, cx, graphBaseY + 3 + 0*pitch + 1 + boxHeight/2, tSize, "middle", "central", tOpt);
-        addText(formatNum(res.hDist), cx, graphBaseY + 3 + 1*pitch + 1 + boxHeight/2, tSize, "middle", "central", tOpt);
-        addText(formatNum(res.cDist), cx, graphBaseY + 3 + 2*pitch + 1 + boxHeight/2, tSize, "middle", "central", tOpt);
-        addText(formatNum(res.vDist), cx, graphBaseY + 3 + 3*pitch + 1 + boxHeight/2, tSize, "middle", "central", tOpt);
-        addText(formatNum(res.elev), cx, graphBaseY + 3 + 4*pitch + 1 + boxHeight/2, tSize, "middle", "central", tOpt);
-        addText(formatNum(res.grad, 1), cx, graphBaseY + 3 + 5*pitch + 1 + boxHeight/2, tSize, "middle", "central", tOpt);
-        
-        prevPoint = { x: cx, y: cy };
-    });
-
-    svg.innerHTML += svgContent;
-
-    if(!isUserZoomed) {
-        fitSvgToContainer();
-    }
-}
-
-function setupSvgInteractions() {
-    const container = document.getElementById('svgContainer');
-
-    // ホイールでズーム
-    container.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        isUserZoomed = true;
-
-        const zoomFactor = 1.1;
-        const oldZoom = currentZoom;
-        
-        if (e.deltaY < 0) currentZoom *= zoomFactor;
-        else currentZoom /= zoomFactor;
-
-        currentZoom = Math.max(0.0001, Math.min(currentZoom, 10000));
-
-        const rect = container.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-
-        translateX = mouseX - (mouseX - translateX) * (currentZoom / oldZoom);
-        translateY = mouseY - (mouseY - translateY) * (currentZoom / oldZoom);
-
-        applySvgTransform();
-    }, { passive: false });
-
-    // タッチ＆マウス操作（パン＆ピンチズーム）
-    let activePointers = new Map();
-    let initialPinchDist = 0;
-    let initialPinchZoom = 1;
-    let initialPinchCenter = { x: 0, y: 0 };
-
-    container.addEventListener('pointerdown', (e) => {
-        activePointers.set(e.pointerId, e);
-        if (activePointers.size === 2) {
-            isDragging = false;
-            isUserZoomed = true;
-            const pts = Array.from(activePointers.values());
-            initialPinchDist = Math.hypot(pts[0].clientX - pts[1].clientX, pts[0].clientY - pts[1].clientY);
-            initialPinchZoom = currentZoom;
-            const rect = container.getBoundingClientRect();
-            initialPinchCenter = {
-                x: ((pts[0].clientX + pts[1].clientX) / 2) - rect.left,
-                y: ((pts[0].clientY + pts[1].clientY) / 2) - rect.top
-            };
-        } else if (activePointers.size === 1) {
-            isDragging = true;
-            startDragX = e.clientX - translateX;
-            startDragY = e.clientY - translateY;
-        }
-    });
-
-    window.addEventListener('pointermove', (e) => {
-        if (activePointers.has(e.pointerId)) {
-            activePointers.set(e.pointerId, e);
-        }
-        if (activePointers.size === 2) {
-            e.preventDefault(); // ピンチ中のスクロール防止
-            const pts = Array.from(activePointers.values());
-            const newDist = Math.hypot(pts[0].clientX - pts[1].clientX, pts[0].clientY - pts[1].clientY);
-            if (initialPinchDist > 0) {
-                const oldZoom = currentZoom;
-                currentZoom = initialPinchZoom * (newDist / initialPinchDist);
-                currentZoom = Math.max(0.0001, Math.min(currentZoom, 10000));
-                
-                translateX = initialPinchCenter.x - (initialPinchCenter.x - translateX) * (currentZoom / oldZoom);
-                translateY = initialPinchCenter.y - (initialPinchCenter.y - translateY) * (currentZoom / oldZoom);
-                applySvgTransform();
-            }
-        } else if (isDragging && activePointers.size === 1) {
-            e.preventDefault(); // ドラッグ中のスクロール防止
-            translateX = e.clientX - startDragX;
-            translateY = e.clientY - startDragY;
-            applySvgTransform();
-        }
-    }, { passive: false });
-
-    const handlePointerUp = (e) => {
-        activePointers.delete(e.pointerId);
-        if (activePointers.size < 2) {
-            initialPinchDist = 0;
-        }
-        if (activePointers.size === 1) {
-            const pt = Array.from(activePointers.values())[0];
-            startDragX = pt.clientX - translateX;
-            startDragY = pt.clientY - translateY;
-            isDragging = true;
-        } else if (activePointers.size === 0) {
-            isDragging = false;
-        }
-    };
-
-    window.addEventListener('pointerup', handlePointerUp);
-    window.addEventListener('pointercancel', handlePointerUp);
-    window.addEventListener('pointerleave', handlePointerUp);
-
-    // ズームコントロールボタンの処理
-    const doZoom = (factor) => {
-        isUserZoomed = true;
-        const oldZoom = currentZoom;
-        currentZoom *= factor;
-        currentZoom = Math.max(0.0001, Math.min(currentZoom, 10000));
-
-        const cWidth = container.clientWidth;
-        const cHeight = container.clientHeight;
-        const centerX = cWidth / 2;
-        const centerY = cHeight / 2;
-
-        translateX = centerX - (centerX - translateX) * (currentZoom / oldZoom);
-        translateY = centerY - (centerY - translateY) * (currentZoom / oldZoom);
-        
-        applySvgTransform();
-    };
-
-    document.getElementById('btnZoomIn').addEventListener('click', () => doZoom(1.2));
-    document.getElementById('btnZoomOut').addEventListener('click', () => doZoom(1 / 1.2));
-    document.getElementById('btnFit').addEventListener('click', () => {
-        isUserZoomed = false;
-        fitSvgToContainer();
-    });
-}
-
-function fitSvgToContainer() {
-    if (!drawingData) return;
-    const container = document.getElementById('svgContainer');
-    const cWidth = container.clientWidth;
-    const cHeight = container.clientHeight;
-    
-    // レイアウトが完了しておらず幅が0の場合は少し待ってから再実行
-    if (cWidth === 0 || cHeight === 0) {
-        setTimeout(fitSvgToContainer, 100);
-        return;
-    }
-    
-    const { viewW, viewH } = drawingData;
-    
-    // 描画領域全体(はみ出し分含む)がすっぽり収まるようにフィットさせる
-    const zoomW = cWidth / viewW;
-    const zoomH = cHeight / viewH;
-    currentZoom = Math.min(zoomW, zoomH) * 0.95;
-    if (isNaN(currentZoom) || currentZoom <= 0 || !isFinite(currentZoom)) currentZoom = 1; 
-    
-    // 画面中央に配置
-    translateX = (cWidth - viewW * currentZoom) / 2;
-    translateY = (cHeight - viewH * currentZoom) / 2;
-    
-    applySvgTransform();
-}
-
-function applySvgTransform() {
-    if (isNaN(translateX) || isNaN(translateY) || isNaN(currentZoom)) return;
-    const wrapper = document.getElementById('svgTransformWrapper');
-    if (!wrapper) return;
-    const transformStr = `translate(${Number(translateX).toFixed(2)}px, ${Number(translateY).toFixed(2)}px) scale(${Number(currentZoom).toFixed(6)})`;
-    wrapper.style.transform = transformStr;
-}
-function generateDXF() {
-    if (!drawingData) { customMessage("先に計算を実行してください。"); return; }
-    const { results, graphElevBase, pw, ph, scaleH, scaleV, viewW, viewH } = drawingData;
-
-    let dxf = "";
-    // DXF Header
-    dxf += "0\nSECTION\n2\nHEADER\n";
-    dxf += "9\n$ACADVER\n1\nAC1015\n"; 
-    dxf += "9\n$DWGCODEPAGE\n3\nANSI_932\n"; // Shift-JIS
-
-    // 図面範囲 (LIMITS) は用紙サイズ(A3等)に固定し、オブジェクト範囲 (EXTENTS) にはみ出し分を含める
-    dxf += "9\n$EXTMIN\n10\n0.0\n20\n0.0\n30\n0.0\n";
-    dxf += "9\n$EXTMAX\n10\n" + viewW.toFixed(3) + "\n20\n" + viewH.toFixed(3) + "\n30\n0.0\n";
-    dxf += "9\n$LIMMIN\n10\n0.0\n20\n0.0\n30\n0.0\n";
-    dxf += "9\n$LIMMAX\n10\n" + pw.toFixed(3) + "\n20\n" + ph.toFixed(3) + "\n30\n0.0\n";
-    dxf += "0\nENDSEC\n";
-
-    dxf += "0\nSECTION\n2\nENTITIES\n";
-
-    const addDxfLine = (x1, y1, x2, y2, layer="0") => {
-        dxf += "0\nLINE\n8\n" + layer + "\n";
-        dxf += "10\n" + x1.toFixed(3) + "\n20\n" + y1.toFixed(3) + "\n30\n0.0\n";
-        dxf += "11\n" + x2.toFixed(3) + "\n21\n" + y2.toFixed(3) + "\n31\n0.0\n";
-    };
-
-    const addDxfText = (txt, x, y, h, rot=0, layer="TEXT", align="center") => {
-        dxf += "0\nTEXT\n8\n" + layer + "\n";
-        dxf += "1\n" + txt + "\n";
-        dxf += "10\n" + x.toFixed(3) + "\n20\n" + y.toFixed(3) + "\n30\n0.0\n";
-        dxf += "40\n" + h.toFixed(2) + "\n";
-        if (rot !== 0) dxf += "50\n" + rot.toFixed(2) + "\n";
-        
-        let align72 = 1; // Center
-        if (align === "start") align72 = 0; // Left
-        else if (align === "end") align72 = 2; // Right
-        
-        if (align72 > 0) {
-            dxf += "72\n" + align72 + "\n"; 
-            dxf += "11\n" + x.toFixed(3) + "\n21\n" + y.toFixed(3) + "\n31\n0.0\n";
-            dxf += "73\n2\n"; // Middle
-        } else {
-            dxf += "72\n0\n";
-            dxf += "11\n" + x.toFixed(3) + "\n21\n" + y.toFixed(3) + "\n31\n0.0\n";
-            dxf += "73\n2\n";
-        }
-    };
-
-    // 帯表の寸法とレイアウト
-    const pitch = 12; 
-    const boxHeight = 10; 
-    const numBands = 6;
-    const bandLabels = [ "測　点　名", "水 平 距 離", "追加水平距離", "垂 直 距 離", "追加垂直距離", "勾　　　配" ];
-
-    const marginX = 12;
-    const labelBoxW = 35;
-    const colGap = 2;
-    const dataBoxX = 20 + labelBoxW + colGap;
-    const startX = dataBoxX + marginX; 
-    
-    // DXFはY軸が下から上。baseY をDL線の位置とする
-    const baseY = 30 + (numBands * pitch) + 3;
-
-    // Frame
-    addDxfLine(0, 0, pw, 0, "FRAME");
-    addDxfLine(pw, 0, pw, ph, "FRAME");
-    addDxfLine(pw, ph, 0, ph, "FRAME");
-    addDxfLine(0, ph, 0, 0, "FRAME");
-
-    const totalDistCAD = (results[results.length - 1].cDist * 1000) / scaleH;
-    const endX = startX + totalDistCAD;
-    const tableEndX = endX + marginX;
-    const dataBoxW = tableEndX - dataBoxX;
-
-    // DL線
-    addDxfLine(20, baseY, tableEndX, baseY, "FRAME");
-    addDxfText(`DL = ${formatNum(graphElevBase)}`, 20, baseY + 2, 4, 0, "TEXT", "start");
-
-    // 表の箱描画
-    for (let i = 0; i < numBands; i++) {
-        const yTop = baseY - 3 - i * pitch - 1;
-        const yBot = yTop - boxHeight;
-        
-        // 項目名箱
-        addDxfLine(20, yTop, 20 + labelBoxW, yTop, "FRAME");
-        addDxfLine(20, yBot, 20 + labelBoxW, yBot, "FRAME");
-        addDxfLine(20, yTop, 20, yBot, "FRAME");
-        addDxfLine(20 + labelBoxW, yTop, 20 + labelBoxW, yBot, "FRAME");
-        addDxfText(bandLabels[i], 20 + labelBoxW/2, (yTop + yBot)/2, 4, 0, "TEXT");
-        
-        // データ箱
-        addDxfLine(dataBoxX, yTop, tableEndX, yTop, "FRAME");
-        addDxfLine(dataBoxX, yBot, tableEndX, yBot, "FRAME");
-        addDxfLine(dataBoxX, yTop, dataBoxX, yBot, "FRAME");
-        addDxfLine(tableEndX, yTop, tableEndX, yBot, "FRAME");
-    }
-
-    // 縦軸スケールと目盛り
-    let maxElev = graphElevBase;
-    results.forEach(r => { if(r.elev > maxElev) maxElev = r.elev; });
-    let scaleTopElev = Math.ceil(maxElev / 10) * 10 + 10;
-    if (scaleTopElev - maxElev < 5) scaleTopElev += 10;
-
-    const scaleTopY = baseY + ((scaleTopElev - graphElevBase) * 1000) / scaleV;
-    addDxfLine(dataBoxX, baseY, dataBoxX, scaleTopY, "GRID");
-
-    for (let e = graphElevBase; e <= scaleTopElev; e += 2) {
-        const y = baseY + ((e - graphElevBase) * 1000) / scaleV;
-        const is10m = (Math.abs(e % 10) < 0.01);
-        const tickLen = is10m ? 4 : 2;
-        addDxfLine(dataBoxX, y, dataBoxX - tickLen, y, "GRID");
-        if (is10m && e > graphElevBase) {
-            addDxfText(formatNum(e), dataBoxX - tickLen - 1.5, y, 3.5, 0, "TEXT", "end");
-        }
-    }
-
-    // SCALE 三角形 (左端をテーブル左端 x=20 に合わせる)
-    const triW = 20;
-    const triH = 15;
-    const triX1 = 20; // 帯表の左端に揃える
-    const triX2 = triX1 + triW; 
-    const triY2 = baseY + 15; // DL線の少し上
-    const triY1 = triY2 + triH; 
-
-    addDxfLine(triX1, triY2, triX2, triY1, "FRAME");
-    addDxfLine(triX2, triY1, triX2, triY2, "FRAME");
-    addDxfLine(triX2, triY2, triX1, triY2, "FRAME");
-
-    const midX = (triX1 + triX2) / 2;
-    const midY = (triY1 + triY2) / 2;
-    const angRad = Math.atan2(triH, triW);
-    const angDeg = angRad * 180 / Math.PI;
-    const nx = -Math.sin(angRad) * 1.5;
-    const ny = Math.cos(angRad) * 1.5;
-
-    addDxfText("S C A L E", midX + nx, midY + ny, 3, angDeg, "TEXT");
-    addDxfText(`1:${scaleH.toLocaleString()}`, triX1 + triW/2, triY2 - 3.5, 3, 0, "TEXT");
-    addDxfText(`1:${scaleV.toLocaleString()}`, triX2 + 2, triY1 - triH/2, 3, 90, "TEXT");
-
-    // --- 属性表（図面枠）の描画 (DXF) ---
-    const { attrData } = drawingData;
-    const topMargin = 15;
-    const tbW = 120;
-    const rowH = 10;
-    const tbH = rowH * 6;
-    // 縦軸スケール(dataBoxX)の少し右に配置
-    const tX = dataBoxX + 15;
-    // DXFはY軸が下から上。用紙上端(ph)から余白と表の高さを引いた位置が左下座標になる
-    const tY = ph - topMargin - tbH;
-
-    // 外枠と横線
-    for (let i = 0; i <= 6; i++) {
-        addDxfLine(tX, tY + i * rowH, tX + tbW, tY + i * rowH, "FRAME");
-    }
-    // 縦線
-    addDxfLine(tX, tY, tX, tY + tbH, "FRAME");
-    addDxfLine(tX + 25, tY, tX + 25, tY + tbH, "FRAME");
-    addDxfLine(tX + tbW, tY, tX + tbW, tY + tbH, "FRAME");
-    
-    // 6行目(一番下)と1行目(一番上)の追加縦線
-    addDxfLine(tX + 60, tY, tX + 60, tY + rowH, "FRAME");
-    addDxfLine(tX + 80, tY, tX + 80, tY + rowH, "FRAME");
-    addDxfLine(tX + 60, tY + 5 * rowH, tX + 60, tY + 6 * rowH, "FRAME");
-    addDxfLine(tX + 80, tY + 5 * rowH, tX + 80, tY + 6 * rowH, "FRAME");
-
-    const addDxfTbText = (txt, cx, cy, size=4) => {
-        addDxfText(txt, cx, cy, size, 0, "TEXT", "center");
-    };
-    const addDxfTbVal = (txt, x, cy, size=4) => {
-        addDxfText(txt, x, cy, size, 0, "TEXT", "start");
-    };
-
-    // 項目名
-    addDxfTbText("年　　度", tX + 12.5, tY + 55);
-    addDxfTbText("名　　称", tX + 12.5, tY + 45);
-    addDxfTbText("施 工 地", tX + 12.5, tY + 35);
-    addDxfTbText("事 業 名", tX + 12.5, tY + 25);
-    addDxfTbText("事業所名", tX + 12.5, tY + 15);
-    addDxfTbText("図面番号", tX + 12.5, tY + 5);
-
-    addDxfTbText("工事番号", tX + 70, tY + 55, 2.5);
-    addDxfTbText("縮　　尺", tX + 70, tY + 5, 3.5);
-
-    // データ値
-    addDxfTbVal(attrData.year, tX + 28, tY + 55);
-    addDxfTbVal(attrData.constName, tX + 82, tY + 55, 3);
-    addDxfTbVal(attrData.title, tX + 28, tY + 45);
-    addDxfTbVal(attrData.location, tX + 28, tY + 35);
-    addDxfTbVal(attrData.project, tX + 28, tY + 25);
-    addDxfTbVal(attrData.office, tX + 28, tY + 15);
-    addDxfTbVal(attrData.drawNo, tX + 28, tY + 5);
-    addDxfTbVal(attrData.scaleText, tX + 82, tY + 5, 3);
-
-    // データ描画
-    let prevX = null, prevY = null;
-    const tickLen = 0.5;
-
-    results.forEach(res => {
-        const cx = startX + (res.cDist * 1000) / scaleH;
-        const cy = baseY + ((res.elev - graphElevBase) * 1000) / scaleV;
-        
-        addDxfLine(cx, baseY, cx, cy, "GRID");
-
-        for(let j=0; j<numBands; j++) {
-            const yTop = baseY - 3 - j * pitch - 1;
-            const yBot = yTop - boxHeight;
-            addDxfLine(cx, yTop + tickLen, cx, yTop - tickLen, "GRID");
-            addDxfLine(cx, yBot + tickLen, cx, yBot - tickLen, "GRID");
-        }
-
-        if (prevX !== null) {
-            addDxfLine(prevX, prevY, cx, cy, "GRAPH");
-        }
-
-        const tSize = 2.5; // 文字サイズを小さく調整
-        const rot = 90; 
-
-        addDxfText(res.pt, cx, baseY - 3 - 0*pitch - 1 - boxHeight/2, tSize, rot, "DATA");
-        addDxfText(formatNum(res.hDist), cx, baseY - 3 - 1*pitch - 1 - boxHeight/2, tSize, rot, "DATA");
-        addDxfText(formatNum(res.cDist), cx, baseY - 3 - 2*pitch - 1 - boxHeight/2, tSize, rot, "DATA");
-        addDxfText(formatNum(res.vDist), cx, baseY - 3 - 3*pitch - 1 - boxHeight/2, tSize, rot, "DATA");
-        addDxfText(formatNum(res.elev), cx, baseY - 3 - 4*pitch - 1 - boxHeight/2, tSize, rot, "DATA");
-        addDxfText(formatNum(res.grad, 1), cx, baseY - 3 - 5*pitch - 1 - boxHeight/2, tSize, rot, "DATA");
-
-        prevX = cx; prevY = cy;
-    });
-
-    dxf += "0\nENDSEC\n0\nEOF\n";
-
-    // Download Logic with Shift-JIS
-    const warningEl = document.getElementById('dxfWarning');
-    try {
-        if (typeof Encoding === 'undefined') throw new Error("Encoding.js is not loaded.");
-        const unicodeArray = Encoding.stringToCode(dxf);
-        const sjisArray = Encoding.convert(unicodeArray, 'SJIS', 'UNICODE');
-        const uint8Array = new Uint8Array(sjisArray);
-        const blob = new Blob([uint8Array], { type: 'application/dxf' });
-        
-        warningEl.classList.add('hidden');
-        triggerDownload(blob, 'profile.dxf');
-    } catch (e) {
-        console.warn("Shift-JIS conversion failed, falling back to UTF-8", e);
-        warningEl.classList.remove('hidden');
-        
-        const blob = new Blob([dxf], { type: 'application/dxf' });
-        triggerDownload(blob, 'profile_utf8.dxf');
-    }
-}
-
-function triggerDownload(blob, filename) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
-</script>
-</body>
+    <script type="module" src="./src/profile.js"></script>
+  </body>
 </html>
