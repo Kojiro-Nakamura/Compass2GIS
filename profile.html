@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>コンパス測量 縦断図作成ツール</title>
+    <title>コンパス測量 縦断図作成ツール v1.0.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js"></script>
     <style>
@@ -246,7 +246,7 @@ window.onload = () => {
     }
     setupUI();
     setupSvgInteractions();
-    processData();
+    setTimeout(() => processData(), 100);
 };
 
 function setupUI() {
@@ -351,6 +351,7 @@ function processData() {
         });
     }
 
+    if (surveyData.length === 0) return;
     calculateProfile();
     updateTable();
     drawVectorPreview();
@@ -775,7 +776,8 @@ function fitSvgToContainer() {
     // 描画領域全体(はみ出し分含む)がすっぽり収まるようにフィットさせる
     const zoomW = cWidth / viewW;
     const zoomH = cHeight / viewH;
-    currentZoom = Math.min(zoomW, zoomH) * 0.95; 
+    currentZoom = Math.min(zoomW, zoomH) * 0.95;
+    if (isNaN(currentZoom) || currentZoom <= 0 || !isFinite(currentZoom)) currentZoom = 1; 
     
     // 画面中央に配置
     translateX = (cWidth - viewW * currentZoom) / 2;

@@ -1,13 +1,15 @@
 {
   "name": "compass2gis",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build --base=./",
     "preview": "vite preview",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "prebuild": "node increment-version.cjs",
+    "predeploy": "npm run build"
   },
   "devDependencies": {
     "gh-pages": "^6.3.0",
