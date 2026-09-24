@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>コンパス測量 縦断図作成ツール v1.0.1</title>
+    <title>コンパス測量 縦断図作成ツール v1.0.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js"></script>
     <style>
@@ -712,7 +712,7 @@ function setupSvgInteractions() {
         if (e.deltaY < 0) currentZoom *= zoomFactor;
         else currentZoom /= zoomFactor;
 
-        currentZoom = Math.max(0.1, Math.min(currentZoom, 10));
+        currentZoom = Math.max(0.0001, Math.min(currentZoom, 10000));
 
         const rect = container.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
@@ -744,7 +744,7 @@ function setupSvgInteractions() {
         isUserZoomed = true;
         const oldZoom = currentZoom;
         currentZoom *= factor;
-        currentZoom = Math.max(0.1, Math.min(currentZoom, 10));
+        currentZoom = Math.max(0.0001, Math.min(currentZoom, 10000));
 
         const cWidth = container.clientWidth;
         const cHeight = container.clientHeight;
