@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>コンパス測量 縦断図作成ツール v1.0.5</title>
+    <title>コンパス測量 縦断図作成ツール v1.0.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js"></script>
     <style>
@@ -14,14 +14,14 @@
             overflow: hidden;
             background-color: #e5e7eb;
             position: relative;
-            cursor: grab;
+            cursor: grab; touch-action: none;
             user-select: none; /* ドラッグ中のテキスト選択を無効化 */
         }
         .canvas-container:active {
             cursor: grabbing;
         }
         #previewSvg {
-            transform-origin: 0 0;
+            
             /* will-change: transform; を削除しました。これでベクターとして再描画されます */
         }
         /* カスタムスクロールバー */
@@ -37,7 +37,7 @@
 
 <div class="w-full px-2 lg:px-4 py-4 flex flex-col h-screen">
     <header class="mb-4">
-        <h1 class="text-2xl font-bold text-gray-900">コンパス測量 縦断図作成ツール v1.0.5</h1>
+        <h1 class="text-2xl font-bold text-gray-900">コンパス測量 縦断図作成ツール v1.0.6</h1>
         <p class="text-sm text-gray-600">縮尺・用紙サイズ対応 / DXF・HTML作図 (完全ベクター表示)</p>
     </header>
 
@@ -152,7 +152,8 @@
             <!-- プレビューエリア -->
             <div id="previewArea" class="flex-1 relative overflow-hidden flex flex-col">
                 <div class="canvas-container rounded border" id="svgContainer">
-                    <svg id="previewSvg" xmlns="http://www.w3.org/2000/svg">
+                    <div id="svgTransformWrapper" style="transform-origin: 0 0; width: 100%; height: 100%;">
+                      <svg id="previewSvg" xmlns="http://www.w3.org/2000/svg">
                         <style>
                             text { font-family: 'Inter', sans-serif; }
                         </style>
@@ -725,19 +726,19 @@ function setupSvgInteractions() {
     }, { passive: false });
 
     // ドラッグでパン
-    container.addEventListener('mousedown', (e) => {
+    container.addEventListener('pointerdown', (e) => {
         isDragging = true;
         startDragX = e.clientX - translateX;
         startDragY = e.clientY - translateY;
     });
-    window.addEventListener('mousemove', (e) => {
+    window.addEventListener('pointermove', (e) => {
         if (!isDragging) return;
         translateX = e.clientX - startDragX;
         translateY = e.clientY - startDragY;
         applySvgTransform();
     });
-    window.addEventListener('mouseup', () => { isDragging = false; });
-    window.addEventListener('mouseleave', () => { isDragging = false; });
+    window.addEventListener('pointerup', () => { isDragging = false; });
+    window.addEventListener('pointerleave', () => { isDragging = false; });
 
     // ズームコントロールボタンの処理
     const doZoom = (factor) => {
@@ -771,6 +772,12 @@ function fitSvgToContainer() {
     const cWidth = container.clientWidth;
     const cHeight = container.clientHeight;
     
+    // レイアウトが完了しておらず幅が0の場合は少し待ってから再実行
+    if (cWidth === 0 || cHeight === 0) {
+        setTimeout(fitSvgToContainer, 100);
+        return;
+    }
+    
     const { viewW, viewH } = drawingData;
     
     // 描画領域全体(はみ出し分含む)がすっぽり収まるようにフィットさせる
@@ -787,8 +794,8 @@ function fitSvgToContainer() {
 }
 
 function applySvgTransform() {
-    const svg = document.getElementById('previewSvg');
-    svg.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentZoom})`;
+    const wrapper = document.getElementById('svgTransformWrapper');
+    wrapper.style.transform = `translate(${Number(translateX).toFixed(2)}px, ${Number(translateY).toFixed(2)}px) scale(${Number(currentZoom).toFixed(6)})`;
 }
 
 function generateDXF() {
