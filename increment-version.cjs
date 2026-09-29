@@ -28,10 +28,10 @@ if (indexHtml.includes('<title>Compass2GIS v')) {
     indexHtml = indexHtml.replace(/<title>Compass2GIS<\/title>/, `<title>Compass2GIS v${newVersion}</title>`);
 }
 // index.html h1
-if (indexHtml.includes('<h1>🌍 コンパスtoGIS（ブラウザ版） v')) {
-    indexHtml = indexHtml.replace(/<h1>🌍 コンパスtoGIS（ブラウザ版） v.*?<\/h1>/, `<h1>🌍 コンパスtoGIS（ブラウザ版） v${newVersion}</h1>`);
+if (indexHtml.includes('<h1>🌍 コンパスtoGIS（ブラウザ版）v')) {
+    indexHtml = indexHtml.replace(/<h1>🌍 コンパスtoGIS（ブラウザ版）v.*?<\/h1>/, `<h1>🌍 コンパスtoGIS（ブラウザ版）v${newVersion}</h1>`);
 } else {
-    indexHtml = indexHtml.replace(/<h1>🌍 コンパスtoGIS（ブラウザ版）<\/h1>/, `<h1>🌍 コンパスtoGIS（ブラウザ版） v${newVersion}</h1>`);
+    indexHtml = indexHtml.replace(/<h1>🌍 コンパスtoGIS（ブラウザ版）<\/h1>/, `<h1>🌍 コンパスtoGIS（ブラウザ版）v${newVersion}</h1>`);
 }
 fs.writeFileSync('index.html', indexHtml);
 
@@ -42,12 +42,9 @@ if (profileHtml.includes('<title>コンパス測量 縦断図作成ツール v')
 } else {
     profileHtml = profileHtml.replace(/<title>コンパス測量 縦断図作成ツール<\/title>/, `<title>コンパス測量 縦断図作成ツール v${newVersion}</title>`);
 }
-// profile.html h1
-if (profileHtml.includes('<h1 class="text-2xl font-bold text-gray-900">コンパス測量 縦断図作成ツール v')) {
-    profileHtml = profileHtml.replace(/<h1 class="text-2xl font-bold text-gray-900">コンパス測量 縦断図作成ツール v.*?<\/h1>/, `<h1 class="text-2xl font-bold text-gray-900">コンパス測量 縦断図作成ツール v${newVersion}</h1>`);
-} else {
-    profileHtml = profileHtml.replace(/<h1 class="text-2xl font-bold text-gray-900">コンパス測量 縦断図作成ツール<\/h1>/, `<h1 class="text-2xl font-bold text-gray-900">コンパス測量 縦断図作成ツール v${newVersion}</h1>`);
-}
+// profile.html h1 (handle multiline due to prettier)
+profileHtml = profileHtml.replace(/<h1 class="text-2xl font-bold text-gray-900">[\s\S]*?<\/h1>/, `<h1 class="text-2xl font-bold text-gray-900">\n          コンパス測量 縦断図作成ツール v${newVersion}\n        </h1>`);
+
 fs.writeFileSync('profile.html', profileHtml);
 
 console.log(`Version incremented to v${newVersion}`);

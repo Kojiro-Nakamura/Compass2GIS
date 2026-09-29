@@ -529,7 +529,7 @@ function fitSvgToContainer() {
 
 function applySvgTransform() {
     if (isNaN(translateX) || isNaN(translateY) || isNaN(currentZoom)) return;
-    const wrapper = document.getElementById('svgTransformWrapper');
+    const wrapper = document.getElementById('previewSvg');
     if (!wrapper) return;
     const transformStr = `translate(${Number(translateX).toFixed(2)}px, ${Number(translateY).toFixed(2)}px) scale(${Number(currentZoom).toFixed(6)})`;
     wrapper.style.transform = transformStr;
