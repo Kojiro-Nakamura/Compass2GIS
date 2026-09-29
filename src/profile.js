@@ -331,9 +331,7 @@ function calculateProfile() {
     });
 
     const isOverflow = (maxDrawX > pw || minDrawY < 0);
-    if (isOverflow) {
-        customMessage("図面が用紙サイズからはみ出しています（プレビューでスクロール確認可能）");
-    }
+    
 
     // プレビュー表示用(viewBox)の範囲を拡張する（緑枠自体はpw, phのまま）
     const viewX = Math.min(0, -20);
@@ -537,7 +535,7 @@ function applySvgTransform() {
     wrapper.style.transform = transformStr;
 }
 function generateDXF() {
-    if (!drawingData) { customMessage("先に計算を実行してください。"); return; }
+    if (!drawingData) { alert("先に計算を実行してください。"); return; }
     const attrIds = ['attrYear', 'attrConstName', 'attrTitle', 'attrLocation', 'attrProject', 'attrOffice', 'attrDrawNo', 'attrScaleText'];
     const attrs = {
         year: document.getElementById('attrYear').value,
