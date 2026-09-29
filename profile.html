@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>コンパス測量 縦断図作成ツール v1.1.3</title>
+    <title>コンパス測量 縦断図作成ツール v1.1.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js"></script>
     <style>
@@ -47,14 +47,14 @@
         background-color: rgba(0, 0, 0, 0.5);
       }
     </style>
-    <script type="module" crossorigin src="./assets/profile-CwfTImQq.js"></script>
+    <script type="module" crossorigin src="./assets/profile-Bu0Z_x8j.js"></script>
     <link rel="modulepreload" crossorigin href="./assets/modulepreload-polyfill-B5Qt9EMX.js">
   <link rel="manifest" href="./manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="./registerSW.js"></script></head>
   <body class="text-gray-800">
     <div class="w-full px-2 lg:px-4 py-4 flex flex-col h-screen">
       <header class="mb-4">
         <h1 class="text-2xl font-bold text-gray-900">
-          コンパス測量 縦断図作成ツール v1.1.0
+          コンパス測量 縦断図作成ツール v1.1.5
         </h1>
         <p class="text-sm text-gray-600">
           縮尺・用紙サイズ対応 / DXF・HTML作図 (完全ベクター表示)
@@ -330,16 +330,8 @@
               class="canvas-container rounded border flex-1 w-full relative overflow-hidden"
               id="svgContainer"
             >
-              <div
-                id="svgTransformWrapper"
-                style="
-                  transform-origin: 0 0;
-                  width: 100%;
-                  height: 100%;
-                  will-change: transform;
-                "
-              >
-                <svg id="previewSvg" xmlns="http://www.w3.org/2000/svg">
+              
+                <svg id="previewSvg" xmlns="http://www.w3.org/2000/svg" style="transform-origin: 0 0;">
                   <style>
                     text {
                       font-family: "Inter", sans-serif;
@@ -347,7 +339,6 @@
                   </style>
                   <!-- ここにベクター作図される -->
                 </svg>
-              </div>
               <!-- ズームコントロールボタン -->
               <div
                 class="absolute bottom-4 right-4 flex bg-white border border-gray-300 rounded shadow-sm z-10 overflow-hidden"
