@@ -9,9 +9,9 @@ export function generateProfileDXF(drawingData, attrs, triggerDownload, showWarn
     dxf += "9\n$DWGCODEPAGE\n3\nANSI_932\n"; // Shift-JIS
 
     // 図面範囲 (LIMITS) は用紙サイズ(A3等)に固定し、オブジェクト範囲 (EXTENTS) にはみ出し分を含める
-    dxf += "9\n$EXTMIN\n10\n0.0\n20\n0.0\n30\n0.0\n";
+    dxf += "9\n$EXTMIN\n10\n0.0\n20\n-100.0\n30\n0.0\n";
     dxf += "9\n$EXTMAX\n10\n" + viewW.toFixed(3) + "\n20\n" + viewH.toFixed(3) + "\n30\n0.0\n";
-    dxf += "9\n$LIMMIN\n10\n0.0\n20\n0.0\n30\n0.0\n";
+    dxf += "9\n$LIMMIN\n10\n0.0\n20\n-100.0\n30\n0.0\n";
     dxf += "9\n$LIMMAX\n10\n" + pw.toFixed(3) + "\n20\n" + ph.toFixed(3) + "\n30\n0.0\n";
     dxf += "0\nENDSEC\n";
 
