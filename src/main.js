@@ -165,7 +165,11 @@ class CompassSurveyApp {
                 
                 bindClick(this.els.btnSaveJSON, () => this.openExportModal('json'));
                 bindClick(this.els.btnExportGeoJSON, () => this.openExportModal('geojson'));
-                bindClick(this.els.btnExportHTML, () => this.openExportModal('html'));
+                bindClick(this.els.btnExportHTML, () => {
+                    const attrValues = this.state.attributes.map(a => a.value ? a.value.trim() : '').filter(v => v !== '');
+                    const fileName = attrValues.length > 0 ? attrValues.join('_') : '令和8年度_育成複層林整備_山田太郎_No.10';
+                    this.showHTMLPreview(fileName, 'A4', 'landscape', 'auto', 50);
+                });
                 if (this.els.btnProfile) {
                     bindClick(this.els.btnProfile, () => {
                         let tsv = '器械点\t視準点\t方位角\t高低角\t斜距離\n';
