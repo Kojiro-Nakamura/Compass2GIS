@@ -123,11 +123,25 @@ export const drawing = {
     },
 
     updateBounds() {
-        if (this.state.nodes.size === 0) return;
+        const hasAnn = (this.state.annotations?.lines?.length > 0) || (this.state.annotations?.texts?.length > 0);
+        if (this.state.nodes.size === 0 && !hasAnn) return;
         let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
         this.state.nodes.forEach(n => {
             if(n.x<minX)minX=n.x; if(n.x>maxX)maxX=n.x; if(n.y<minY)minY=n.y; if(n.y>maxY)maxY=n.y;
         });
+        const expand = (x, y) => { if (!isNaN(x) && !isNaN(y)) { if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y; } };
+        if (this.state.annotations) {
+            (this.state.annotations.lines || []).forEach(line => {
+                if (!line.points || line.points.length === 0) return;
+                const rot = line.rotation || 0;
+                let lMinX = Infinity, lMaxX = -Infinity, lMinY = Infinity, lMaxY = -Infinity;
+                line.points.forEach(p => { if (p.x < lMinX) lMinX = p.x; if (p.x > lMaxX) lMaxX = p.x; if (p.y < lMinY) lMinY = p.y; if (p.y > lMaxY) lMaxY = p.y; });
+                const cx = (lMinX + lMaxX) / 2, cy = (lMinY + lMaxY) / 2, cos = Math.cos(rot), sin = Math.sin(rot);
+                line.points.forEach(p => { const dx = p.x - cx, dy = p.y - cy; expand(cx + dx * cos + dy * sin, cy - dx * sin + dy * cos); });
+            });
+            (this.state.annotations.texts || []).forEach(t => expand(t.x, t.y));
+        }
+        if (minX === Infinity) return;
         this.state.bounds = { minX, maxX, minY, maxY };
     },
 
@@ -137,7 +151,9 @@ export const drawing = {
     },
 
     autoFit() {
-        if (this.state.nodes.size < 2) {
+        this.updateBounds();
+        const hasAnn = (this.state.annotations?.lines?.length > 0) || (this.state.annotations?.texts?.length > 0);
+        if (this.state.nodes.size < 2 && !hasAnn) {
             this.state.view.scale = 1; this.state.view.offsetX = this.els.canvas.width / 2; this.state.view.offsetY = this.els.canvas.height / 2; return;
         }
         const { padding } = this.CONFIG.canvas, { bounds } = this.state, dW = bounds.maxX - bounds.minX, dH = bounds.maxY - bounds.minY;
