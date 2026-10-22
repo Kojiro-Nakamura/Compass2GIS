@@ -1195,6 +1195,7 @@ class CompassSurveyApp {
                 if (btn === 0) {
                     if (this.state.view.isRotating) { 
                         this.state.view.isRotating = false; 
+                        this._lastAnnotationInteraction = Date.now();
                         this.state.view.rotatingTarget = null; 
                         document.body.classList.remove('left-dragging'); 
                         this.saveToLocalStorage(); 
@@ -1207,6 +1208,7 @@ class CompassSurveyApp {
                     }
                     if (this.state.view.isScaling) {
                         this.state.view.isScaling = false;
+                        this._lastAnnotationInteraction = Date.now();
                         this.state.view.scalingTarget = null;
                         this.state.view.scalingInitialState = null;
                         document.body.classList.remove('left-dragging');
@@ -1221,6 +1223,7 @@ class CompassSurveyApp {
                     }
                     if (this.state.view.isMovingAnnotation) {
                         this.state.view.isMovingAnnotation = false;
+                        this._lastAnnotationInteraction = Date.now();
                         this.state.view.movingTarget = null;
                         this.state.view.movingLayer = null;
                         this.state.view.movingExtras = null;

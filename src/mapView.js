@@ -27,6 +27,7 @@ export const mapView = {
     },
 
     handleMapClick(e) {
+        if (this._lastAnnotationInteraction && Date.now() - this._lastAnnotationInteraction < 300) return;
         if (['pan', 'erase', 'select'].includes(this.state.interactionMode)) { if (this.state.interactionMode === 'select') this._clearSelection(); return; }
         const coords = this.getInternalCoordsFromLatLng(e.latlng.lat, e.latlng.lng);
         if (this.state.interactionMode === 'text') this._showTextPrompt(coords.x, coords.y);
@@ -87,13 +88,13 @@ export const mapView = {
             const weight = line.lineWidth || 3, color = line.color || '#059669', isSel = selected?.type === 'line' && selected?.index === i;
             let dashArray = null; if (line.lineStyle === 'dashed') dashArray = '8, 6'; else if (line.lineStyle === 'dotted') dashArray = '2, 4';
 
-            let highlightPolyline = null, handleLine = null, cLatLng = null, handleInternalY = 0, hMarker = null;
+            let highlightPolyline = null, handleLine = null, cLatLng = null, handleInternalY = 0, hMarker = null, tl = null, tr = null, br = null, bl = null;
 
             if (isSel) {
-                const tl = this._getRotLatLng({x: minX, y: maxY}, cx, cy, rot);
-                const tr = this._getRotLatLng({x: maxX, y: maxY}, cx, cy, rot);
-                const br = this._getRotLatLng({x: maxX, y: minY}, cx, cy, rot);
-                const bl = this._getRotLatLng({x: minX, y: minY}, cx, cy, rot);
+                tl = this._getRotLatLng({x: minX, y: maxY}, cx, cy, rot);
+                tr = this._getRotLatLng({x: maxX, y: maxY}, cx, cy, rot);
+                br = this._getRotLatLng({x: maxX, y: minY}, cx, cy, rot);
+                bl = this._getRotLatLng({x: minX, y: minY}, cx, cy, rot);
                 cLatLng = this._getRotLatLng({x: cx, y: cy}, cx, cy, 0);
                 highlightPolyline = L.polyline([tl, tr, br, bl, tl], { color: '#3b82f6', weight: 1.5, dashArray: '5, 5', opacity: 0.8, interactive: false }).addTo(this.mapLayerGroup);
                 
