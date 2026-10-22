@@ -1618,3 +1618,9 @@ Object.assign(CompassSurveyApp.prototype, surveyMath);
 Object.assign(CompassSurveyApp.prototype, drawing);
 Object.assign(CompassSurveyApp.prototype, mapView);
 Object.assign(CompassSurveyApp.prototype, exportUtils);
+if ('serviceWorker' in navigator) {
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) { refreshing = true; window.location.reload(); }
+    });
+}

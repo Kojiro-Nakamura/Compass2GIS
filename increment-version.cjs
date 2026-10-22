@@ -22,17 +22,9 @@ fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
 
 // index.html title
 let indexHtml = fs.readFileSync('index.html', 'utf8');
-if (indexHtml.includes('<title>Compass2GIS v')) {
-    indexHtml = indexHtml.replace(/<title>Compass2GIS v.*?<\/title>/, `<title>Compass2GIS v${newVersion}</title>`);
-} else {
-    indexHtml = indexHtml.replace(/<title>Compass2GIS<\/title>/, `<title>Compass2GIS v${newVersion}</title>`);
-}
+indexHtml = indexHtml.replace(/<title>[\s\S]*?<\/title>/, `<title>コンパスtoGIS（ブラウザ版） v${newVersion}</title>`);
 // index.html h1
-if (indexHtml.includes('<h1>🌍 コンパスtoGIS（ブラウザ版）v')) {
-    indexHtml = indexHtml.replace(/<h1>🌍 コンパスtoGIS（ブラウザ版）v.*?<\/h1>/, `<h1>🌍 コンパスtoGIS（ブラウザ版）v${newVersion}</h1>`);
-} else {
-    indexHtml = indexHtml.replace(/<h1>🌍 コンパスtoGIS（ブラウザ版）<\/h1>/, `<h1>🌍 コンパスtoGIS（ブラウザ版）v${newVersion}</h1>`);
-}
+indexHtml = indexHtml.replace(/<h1>🌍 コンパスtoGIS（ブラウザ版）[\s\S]*?<\/h1>/, `<h1>🌍 コンパスtoGIS（ブラウザ版） v${newVersion}</h1>`);
 fs.writeFileSync('index.html', indexHtml);
 
 // profile.html title
