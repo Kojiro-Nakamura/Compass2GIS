@@ -67,7 +67,8 @@ const Utils = {
         let t = ((p.x - p1.x) * (p2.x - p1.x) + (p.y - p1.y) * (p2.y - p1.y)) / l2;
         t = Math.max(0, Math.min(1, t));
         return Math.sqrt(Math.pow(p.x - (p1.x + t * (p2.x - p1.x)), 2) + Math.pow(p.y - (p1.y + t * (p2.y - p1.y)), 2));
-    }
+    },
+    escapeHTML: (str) => String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 };
 
 
@@ -3484,18 +3485,29 @@ setTimeout(() => { try {
                 if (!nameStr.includes(query) && !attrStr.includes(query)) return;
             }
             const li = document.createElement('li');
+            li.dataset.index = String(index);
             li.textContent = item.name;
             li.title = item.sourceFileName ? `${item.name} (${item.sourceFileName})` : item.name;
             if (this.selectedImportIndex === index) li.classList.add('selected');
-            li.onclick = () => this.selectImportFile(index);
-            li.ondblclick = () => { this.selectImportFile(index); this.els.btnApplyImport.click(); };
+            li.addEventListener('click', () => this.selectImportFile(index));
+            li.addEventListener('dblclick', (e) => {
+                e.preventDefault();
+                this.selectImportFile(index);
+                this.applySelectedImport();
+            });
             this.els.importFileList.appendChild(li);
         });
     },
 
     selectImportFile(index) {
-        this.selectedImportIndex = index; this.renderImportFileList();
+        this.selectedImportIndex = index;
+        if (this.els.importFileList) {
+            Array.from(this.els.importFileList.children).forEach(li => {
+                li.classList.toggle('selected', Number(li.dataset.index) === index);
+            });
+        }
         const item = this.importFilesList[index]; if (!item) return;
+        this.els.btnApplyImport.disabled = false;
         
         if (item.data.previewImage) { this.els.importPreviewImage.src = item.data.previewImage; this.els.importPreviewImage.style.display = 'inline-block'; this.els.importNoPreviewText.style.display = 'none'; } 
         else { this.els.importPreviewImage.style.display = 'none'; this.els.importNoPreviewText.style.display = 'inline-block'; this.els.importNoPreviewText.textContent = 'プレビュー画像なし'; }
@@ -3508,7 +3520,18 @@ setTimeout(() => { try {
             `<strong>${titleLabel}:</strong> ${Utils.escapeHTML(item.name)}${sourceSuffix}<br>` +
             (item.data.tableData ? `<strong>データ数:</strong> ${item.data.tableData.length}行${areaInfo}<br>` : '') +
             (attrText ? `<strong>属性情報:</strong> <span style="color:#4b5563;">${attrText}</span>` : '');
-        this.els.btnApplyImport.disabled = false;
+    },
+
+    applySelectedImport() {
+        if (document.activeElement) document.activeElement.blur();
+        if (this.selectedImportIndex >= 0 && this.importFilesList[this.selectedImportIndex]) {
+            const targetData = this.importFilesList[this.selectedImportIndex].data;
+            this.els.importPreviewModal.style.display = 'none';
+            this.applyImportData(targetData);
+            this.importFilesList = [];
+            if (this.els.inputFileJSON) this.els.inputFileJSON.value = '';
+            if (this.els.inputImportSearch) this.els.inputImportSearch.value = '';
+        }
     },
 
     applyImportData(saved) {
@@ -3521,7 +3544,7 @@ setTimeout(() => { try {
             if(saved.settings.convertEPtoBPChecked !== undefined && this.els.chkConvertEPtoBP) this.els.chkConvertEPtoBP.checked = saved.settings.convertEPtoBPChecked;
             if(saved.settings.nodeLabelInterval !== undefined) this.els.selNodeLabelInterval.value = saved.settings.nodeLabelInterval;
         }
-        this.renderAttrTable(); this.renderTable();
+        this.renderAttrTable(); this.renderTable(); this.saveToLocalStorage();
         setTimeout(() => { this.resizeCanvas(); this.updateDrawing(true); if (this.isMapMode && this.map) { this.map.invalidateSize(); this.updateMapDrawing(true); } }, 100);
         this.pushState(); this.showToast('データを読み込みました。');
     },
@@ -3779,15 +3802,7 @@ class CompassSurveyApp {
                     this.els.inputCustomScale.addEventListener('click', () => this.els.radioCustomScale.checked = true);
                 }
 
-                bindClick(this.els.btnApplyImport, () => {
-                    if (document.activeElement) document.activeElement.blur();
-                    if (this.selectedImportIndex >= 0 && this.importFilesList[this.selectedImportIndex]) {
-                        this.els.importPreviewModal.style.display = 'none';
-                        this.applyImportData(this.importFilesList[this.selectedImportIndex].data);
-                        this.importFilesList = []; this.els.inputFileJSON.value = '';
-                        if (this.els.inputImportSearch) this.els.inputImportSearch.value = '';
-                    }
-                });
+                bindClick(this.els.btnApplyImport, () => this.applySelectedImport());
 
                 if (this.els.inputImportSearch) {
                     this.els.inputImportSearch.addEventListener('input', () => this.renderImportFileList());
