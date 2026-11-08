@@ -675,11 +675,20 @@ class CompassSurveyApp {
                 this.els.inputExportFileName.value = attrValues.length > 0 ? attrValues.join('_') : '令和8年度_育成複層林整備_山田太郎_No.10';
                 
                 if (this.els.shpExportOptions) this.els.shpExportOptions.style.display = 'none';
+                if (this.els.mdbExportOptions) this.els.mdbExportOptions.style.display = 'none';
                 if (type === 'json') { 
                     this.els.exportModalTitle.textContent = 'データの保存 (JSON)'; 
                     this.els.exportExtension.textContent = '.json'; 
                     this.els.htmlExportOptions.style.display = 'none'; 
                     this.els.btnApplyExport.textContent = '保存';
+                }
+                else if (type === 'mdb') {
+                    this.els.exportModalTitle.textContent = 'MDBデータベースに保存 (.mdb)';
+                    this.els.exportExtension.textContent = '.mdb';
+                    this.els.htmlExportOptions.style.display = 'none';
+                    if (this.els.mdbExportOptions) this.els.mdbExportOptions.style.display = 'block';
+                    this.els.btnApplyExport.textContent = '保存';
+                    this.refreshMdbExportModalUI();
                 }
                 else if (type === 'geojson') { 
                     this.els.exportModalTitle.textContent = 'GeoJSON出力'; 
@@ -1618,8 +1627,13 @@ class CompassSurveyApp {
                     if (isMdb) {
                         r.onload = e => {
                             try {
-                                const mdbItems = parseCompassMdb(e.target.result, file.name);
-                                res(mdbItems.map(item => ({ ...item, file, isMdb: true })));
+                                const mdbBuffer = new Uint8Array(e.target.result);
+                                const mdbItems = parseCompassMdb(mdbBuffer, file.name);
+                                if (!this.activeMdbBuffer) {
+                                    this.activeMdbBuffer = mdbBuffer;
+                                    this.activeMdbFileName = file.name;
+                                }
+                                res(mdbItems.map(item => ({ ...item, file, isMdb: true, mdbBuffer })));
                             } catch (err) {
                                 console.warn('MDB parse error:', err);
                                 res([]);

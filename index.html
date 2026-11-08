@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="google" content="notranslate">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>コンパスtoGIS（ブラウザ版） v1.2.3</title>
+    <title>コンパスtoGIS（ブラウザ版） v1.2.4</title>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <link rel="stylesheet" href="/style.css" />
 
@@ -17,7 +17,7 @@
   </head>
   <body>
     <div class="header">
-      <h1>🌍 コンパスtoGIS（ブラウザ版） v1.2.3</h1>
+      <h1>🌍 コンパスtoGIS（ブラウザ版） v1.2.4</h1>
     </div>
 
     <div class="container">
@@ -1091,6 +1091,173 @@
             / <code>.shx</code> / <code>.dbf</code> / <code>.prj</code> /
             <code>.cpg</code>）を1つのZIPにまとめて出力します。
           </div>
+        </div>
+        <div
+          id="mdbExportOptions"
+          style="
+            display: none;
+            margin-bottom: 15px;
+            background: #f9fafb;
+            padding: 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+          "
+        >
+          <div
+            style="
+              font-size: 0.85rem;
+              font-weight: bold;
+              margin-bottom: 6px;
+              color: #4b5563;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            "
+          >
+            <span>🗄️ 保存先のMDBファイル</span>
+            <label
+              style="
+                background: #4b5563;
+                color: #fff;
+                padding: 3px 8px;
+                border-radius: 3px;
+                font-size: 0.75rem;
+                cursor: pointer;
+                font-weight: normal;
+              "
+            >
+              📁 MDBファイルを選択...
+              <input
+                type="file"
+                id="inputTargetMdbFile"
+                accept=".mdb"
+                style="display: none"
+              />
+            </label>
+          </div>
+          <div
+            id="mdbTargetFileInfo"
+            style="
+              font-size: 0.8rem;
+              color: #1f2937;
+              background: #fff;
+              padding: 6px 8px;
+              border: 1px solid #d1d5db;
+              border-radius: 3px;
+              margin-bottom: 10px;
+              word-break: break-all;
+            "
+          >
+            未選択（上のボタンから保存先の.mdbファイルを選択してください）
+          </div>
+
+          <div
+            style="
+              font-size: 0.85rem;
+              font-weight: bold;
+              margin-bottom: 6px;
+              color: #4b5563;
+            "
+          >
+            📌 保存方法
+          </div>
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 6px;
+              font-size: 0.85rem;
+              margin-bottom: 8px;
+            "
+          >
+            <label
+              style="
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+              "
+            >
+              <input
+                type="radio"
+                name="mdbSaveMode"
+                id="radioMdbOverwrite"
+                value="overwrite"
+                checked
+              />
+              既存の箇所に上書き保存
+            </label>
+            <div style="padding-left: 22px; margin-bottom: 4px">
+              <select
+                id="selMdbTargetKasho"
+                style="
+                  width: 100%;
+                  padding: 5px;
+                  font-size: 0.8rem;
+                  border: 1px solid #d1d5db;
+                  border-radius: 3px;
+                  background: #fff;
+                "
+              ></select>
+            </div>
+            <label
+              style="
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+              "
+            >
+              <input
+                type="radio"
+                name="mdbSaveMode"
+                id="radioMdbAppend"
+                value="append"
+              />
+              新規箇所として追加保存
+            </label>
+          </div>
+
+          <div
+            style="
+              font-size: 0.85rem;
+              font-weight: bold;
+              margin-bottom: 4px;
+              color: #4b5563;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            "
+          >
+            <span>🏷️ MDB内の箇所名</span>
+            <button
+              type="button"
+              id="btnAutoMdbKashoName"
+              style="
+                background: #6b7280;
+                color: #fff;
+                padding: 2px 6px;
+                font-size: 0.7rem;
+                border-radius: 3px;
+              "
+              title="現在の属性（年度・事業区分・作業種・所有者・面積）から箇所名を自動生成"
+            >
+              🔄 属性から自動生成
+            </button>
+          </div>
+          <input
+            type="text"
+            id="inputMdbKashoName"
+            placeholder="例: 令和8年度育成複層林整備間伐山田太郎1.23ha"
+            style="
+              width: 100%;
+              padding: 6px 8px;
+              font-size: 0.85rem;
+              border: 1px solid #d1d5db;
+              border-radius: 3px;
+              box-sizing: border-box;
+            "
+          />
         </div>
         <div
           style="

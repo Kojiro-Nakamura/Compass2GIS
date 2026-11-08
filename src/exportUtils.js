@@ -1107,6 +1107,154 @@ setTimeout(() => { try {
         ctx.restore(); return cv.toDataURL('image/jpeg', 0.8);
     },
 
+    generatePreviewGifBytes() {
+        const cv = document.createElement('canvas'), ctx = cv.getContext('2d');
+        cv.width = 600; cv.height = 600;
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 600, 600);
+        // 外枠とヘッダ・グリッドを描画 (コンパスtoGIS.xlsm の平面図プレビュー風)
+        ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 1;
+        for (let g = 60; g < 600; g += 50) {
+            ctx.beginPath(); ctx.moveTo(g, 50); ctx.lineTo(g, 560); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(40, g); ctx.lineTo(560, g); ctx.stroke();
+        }
+        ctx.strokeStyle = '#374151'; ctx.lineWidth = 1.5;
+        ctx.strokeRect(40, 50, 520, 510);
+        ctx.fillStyle = '#111827'; ctx.font = 'bold 18px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('平面図', 300, 32);
+
+        if (this.state.points.length > 0) {
+            const bs = this.state.bounds, dw = bs.maxX - bs.minX, dh = bs.maxY - bs.minY;
+            const s = (dw === 0 && dh === 0) ? 10 : Math.min(440 / (dw || 1), 430 / (dh || 1));
+            const ox = 300 - ((bs.minX + bs.maxX) / 2) * s, oy = 305 + ((bs.minY + bs.maxY) / 2) * s;
+            this._drawAreas(ctx, ox, oy, s, this.state.detectedAreas, this.state.nodes);
+            this._drawLines(ctx, ox, oy, s, this.state.points);
+            this._drawNodes(ctx, ox, oy, s, this.state.nodes, false);
+        }
+        const imgData = ctx.getImageData(0, 0, 600, 600);
+        return encodeRgbaToGif89a(600, 600, imgData.data);
+    },
+
+    generateAutoKashoName() {
+        const totalHa = this.state.detectedAreas.reduce((acc, a) => acc + (a.netArea || 0) / 10000, 0);
+        const areaStr = totalHa > 0 ? `${totalHa.toFixed(2)}ha` : '';
+        const attrVals = this.state.attributes
+            .filter(a => a && a.value && !['備考', '測量者氏名', '所在地', '小班', '代理申請者', '搬出量', '樹種', '林齢', '番号'].includes((a.name || '').trim()))
+            .map(a => String(a.value).trim())
+            .filter(Boolean);
+        const base = attrVals.length > 0 ? attrVals.join('') : '測量箇所';
+        return `${base}${areaStr}`;
+    },
+
+    refreshMdbExportModalUI() {
+        if (!this.els.mdbExportOptions) return;
+        const hasMdb = Boolean(this.activeMdbBuffer && this.activeMdbBuffer.length > 0);
+        if (this.els.mdbTargetFileInfo) {
+            if (hasMdb) {
+                this.els.mdbTargetFileInfo.innerHTML = `<span style="color:#059669;font-weight:bold;">✔ 読込済:</span> ${Utils.escapeHTML(this.activeMdbFileName || 'database.mdb')}`;
+            } else {
+                this.els.mdbTargetFileInfo.innerHTML = `<span style="color:#d97706;">⚠️ 保存先のMDBファイルを上の「📁 MDBファイルを選択...」から指定してください</span>`;
+            }
+        }
+
+        const sel = this.els.selMdbTargetKasho;
+        if (sel) {
+            sel.innerHTML = '';
+            if (hasMdb) {
+                try {
+                    const items = parseCompassMdb(this.activeMdbBuffer, this.activeMdbFileName || 'database.mdb');
+                    this._mdbModalKashoItems = items;
+                    items.forEach(item => {
+                        const opt = document.createElement('option');
+                        opt.value = String(item.kashoId);
+                        opt.textContent = `[ID:${item.kashoId}] ${item.name}`;
+                        if (this.activeMdbKashoId != null && Number(item.kashoId) === Number(this.activeMdbKashoId)) {
+                            opt.selected = true;
+                        }
+                        sel.appendChild(opt);
+                    });
+                } catch (err) {
+                    console.warn('MDB list parse error:', err);
+                    this._mdbModalKashoItems = [];
+                }
+            } else {
+                this._mdbModalKashoItems = [];
+            }
+        }
+
+        const hasExistingItems = Array.isArray(this._mdbModalKashoItems) && this._mdbModalKashoItems.length > 0;
+        if (this.els.radioMdbOverwrite && this.els.radioMdbAppend) {
+            this.els.radioMdbOverwrite.disabled = !hasExistingItems;
+            if (sel) sel.disabled = !hasExistingItems;
+            if (hasExistingItems && this.activeMdbKashoId != null) {
+                this.els.radioMdbOverwrite.checked = true;
+            } else if (!hasExistingItems) {
+                this.els.radioMdbAppend.checked = true;
+            }
+        }
+
+        const isOverwrite = this.els.radioMdbOverwrite && this.els.radioMdbOverwrite.checked && hasExistingItems;
+        if (this.els.inputMdbKashoName) {
+            if (isOverwrite && sel) {
+                const chosen = (this._mdbModalKashoItems || []).find(i => String(i.kashoId) === String(sel.value));
+                this.els.inputMdbKashoName.value = chosen ? chosen.name : this.generateAutoKashoName();
+            } else {
+                this.els.inputMdbKashoName.value = this.generateAutoKashoName();
+            }
+        }
+
+        if (hasMdb && this.els.inputExportFileName) {
+            this.els.inputExportFileName.value = (this.activeMdbFileName || 'database.mdb').replace(/\.mdb$/i, '');
+        }
+    },
+
+    exportMDB(fileName) {
+        if (!this.activeMdbBuffer || this.activeMdbBuffer.length === 0) {
+            this.showToast('保存先のMDBファイルを選択してください。');
+            return false;
+        }
+        try {
+            const modeEl = document.querySelector('input[name="mdbSaveMode"]:checked');
+            const mode = modeEl ? modeEl.value : 'overwrite';
+            const targetKashoId = this.els.selMdbTargetKasho ? parseInt(this.els.selMdbTargetKasho.value, 10) : this.activeMdbKashoId;
+            const kashoName = (this.els.inputMdbKashoName ? this.els.inputMdbKashoName.value.trim() : '') || this.generateAutoKashoName();
+            const totalAreaHa = this.state.detectedAreas.reduce((acc, a) => acc + (a.netArea || 0) / 10000, 0);
+            const previewGifBytes = this.generatePreviewGifBytes();
+
+            const res = saveRecordToCompassMdb(this.activeMdbBuffer, {
+                mode,
+                targetKashoId,
+                kashoName,
+                tableData: this.state.tableData,
+                attributes: this.state.attributes,
+                lat: parseFloat(this.els.inputLat.value) || 34.097294,
+                lon: parseFloat(this.els.inputLon.value) || 135.434808,
+                declination: parseFloat(this.els.inputDeclination.value) || 0,
+                compassAdjustmentChecked: this.els.chkCompassAdjustment.checked,
+                totalAreaHa,
+                previewGifBytes
+            });
+
+            this.activeMdbBuffer = res.buffer;
+            this.activeMdbKashoId = res.kashoId;
+            this.activeMdbKashoName = res.kashoName;
+
+            let outName = (fileName || this.activeMdbFileName || 'database.mdb').trim();
+            if (!/\.mdb$/i.test(outName)) outName += '.mdb';
+            this.activeMdbFileName = outName;
+
+            const blob = new Blob([res.buffer], { type: 'application/x-msaccess' });
+            const url = URL.createObjectURL(blob);
+            this._downloadFile(url, outName);
+            setTimeout(() => URL.revokeObjectURL(url), 10000);
+            this.showToast(`MDB（${res.kashoName}）に保存して出力しました。`);
+            return true;
+        } catch (err) {
+            console.error('MDB save error:', err);
+            this.showToast(`MDB保存エラー: ${err.message || err}`);
+            return false;
+        }
+    },
+
     _downloadFile(dStr, fName) { const a = document.createElement('a'); a.href = dStr; a.download = fName; document.body.appendChild(a); a.click(); a.remove(); },
 
     importJSON(event) {
@@ -1164,7 +1312,14 @@ setTimeout(() => { try {
     applySelectedImport() {
         if (document.activeElement) document.activeElement.blur();
         if (this.selectedImportIndex >= 0 && this.importFilesList[this.selectedImportIndex]) {
-            const targetData = this.importFilesList[this.selectedImportIndex].data;
+            const selectedItem = this.importFilesList[this.selectedImportIndex];
+            if (selectedItem.isMdb && selectedItem.mdbBuffer) {
+                this.activeMdbBuffer = selectedItem.mdbBuffer;
+                this.activeMdbFileName = selectedItem.sourceFileName || (selectedItem.file ? selectedItem.file.name : 'database.mdb');
+                this.activeMdbKashoId = selectedItem.kashoId;
+                this.activeMdbKashoName = selectedItem.name;
+            }
+            const targetData = selectedItem.data;
             this.els.importPreviewModal.style.display = 'none';
             this.applyImportData(targetData);
             this.importFilesList = [];
