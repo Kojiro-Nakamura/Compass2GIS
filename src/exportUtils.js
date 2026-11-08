@@ -1262,6 +1262,11 @@ setTimeout(() => { try {
         this.processJsonFiles(Array.from(files).filter(f => /\.(json|mdb)$/i.test(f.name)));
     },
 
+    importMDB(event) {
+        const files = event.target.files; if (!files || files.length === 0) return;
+        this.processJsonFiles(Array.from(files).filter(f => /\.mdb$/i.test(f.name)));
+    },
+
     renderImportFileList() {
         this.els.importFileList.innerHTML = '';
         const query = (this.els.inputImportSearch ? this.els.inputImportSearch.value : '').trim().toLowerCase();
@@ -1324,6 +1329,7 @@ setTimeout(() => { try {
             this.applyImportData(targetData);
             this.importFilesList = [];
             if (this.els.inputFileJSON) this.els.inputFileJSON.value = '';
+            if (this.els.inputFileMDB) this.els.inputFileMDB.value = '';
             if (this.els.inputImportSearch) this.els.inputImportSearch.value = '';
         }
     },

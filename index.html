@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="google" content="notranslate">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>コンパスtoGIS（ブラウザ版） v1.2.5</title>
+    <title>コンパスtoGIS（ブラウザ版） v1.2.6</title>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <link rel="stylesheet" href="/style.css" />
 
@@ -17,38 +17,54 @@
   </head>
   <body>
     <div class="header">
-      <h1>🌍 コンパスtoGIS（ブラウザ版） v1.2.5</h1>
+      <h1>🌍 コンパスtoGIS（ブラウザ版） v1.2.6</h1>
     </div>
 
     <div class="container">
       <div class="sidebar">
         <div class="controls">
-          <button
-            id="btnSaveJSON"
-            style="background-color: #2e5c8a"
-            title="編集データをJSONで保存"
-          >
-            💾 保存
-          </button>
-          <button
-            id="btnSaveMDB"
-            style="background-color: #1e4d6b"
-            title="コンパスtoGISのMDBファイル（.mdb）にデータを上書き・追加保存"
-          >
-            🗄️ MDB保存
-          </button>
           <label
+            id="lblLoadJSON"
             class="btn-file-load"
-            title="JSONファイルやMDBファイル（コンパスtoGISデータベース）、フォルダをこの画面上にドロップしても開くことができます"
+            style="background-color: #3e6285; padding: 0 9px"
+            title="測量データファイル（.json）を読み込む（フォルダやファイルを画面上にドロップしても開けます）"
           >
-            📂 読込（JSON/MDB）<input
+            📂 測量データ読込<input
               type="file"
               id="inputFileJSON"
-              accept=".json,.mdb"
+              accept=".json"
               multiple
               style="display: none"
             />
           </label>
+          <button
+            id="btnSaveJSON"
+            style="background-color: #2e5c8a; padding: 0 9px"
+            title="測量データをJSONファイル（.json）として保存"
+          >
+            💾 測量データ保存
+          </button>
+          <label
+            id="lblLoadMDB"
+            class="btn-file-load"
+            style="background-color: #2b5b7a; padding: 0 9px"
+            title="コンパスtoGISのMDBファイル（.mdb）を読み込む（画面上にドロップしても開けます）"
+          >
+            📂 MDB読込<input
+              type="file"
+              id="inputFileMDB"
+              accept=".mdb"
+              multiple
+              style="display: none"
+            />
+          </label>
+          <button
+            id="btnSaveMDB"
+            style="background-color: #1e4d6b; padding: 0 9px"
+            title="コンパスtoGISのMDBファイル（.mdb）にデータを上書き・追加保存"
+          >
+            🗄️ MDB保存
+          </button>
           <button
             id="btnSurvey"
             style="background-color: #059669; margin-left: 4px"
