@@ -1111,13 +1111,21 @@ setTimeout(() => { try {
 
     importJSON(event) {
         const files = event.target.files; if (!files || files.length === 0) return;
-        this.processJsonFiles(Array.from(files).filter(f => f.name.toLowerCase().endsWith('.json')));
+        this.processJsonFiles(Array.from(files).filter(f => /\.(json|mdb)$/i.test(f.name)));
     },
 
     renderImportFileList() {
         this.els.importFileList.innerHTML = '';
+        const query = (this.els.inputImportSearch ? this.els.inputImportSearch.value : '').trim().toLowerCase();
         this.importFilesList.forEach((item, index) => {
-            const li = document.createElement('li'); li.textContent = item.name; li.title = item.name;
+            if (query) {
+                const attrStr = item.data.attributes ? item.data.attributes.map(a => `${a.name} ${a.value}`).join(' ').toLowerCase() : '';
+                const nameStr = `${item.name} ${item.sourceFileName || ''}`.toLowerCase();
+                if (!nameStr.includes(query) && !attrStr.includes(query)) return;
+            }
+            const li = document.createElement('li');
+            li.textContent = item.name;
+            li.title = item.sourceFileName ? `${item.name} (${item.sourceFileName})` : item.name;
             if (this.selectedImportIndex === index) li.classList.add('selected');
             li.onclick = () => this.selectImportFile(index);
             li.ondblclick = () => { this.selectImportFile(index); this.els.btnApplyImport.click(); };
@@ -1132,8 +1140,14 @@ setTimeout(() => { try {
         if (item.data.previewImage) { this.els.importPreviewImage.src = item.data.previewImage; this.els.importPreviewImage.style.display = 'inline-block'; this.els.importNoPreviewText.style.display = 'none'; } 
         else { this.els.importPreviewImage.style.display = 'none'; this.els.importNoPreviewText.style.display = 'inline-block'; this.els.importNoPreviewText.textContent = 'プレビュー画像なし'; }
 
-        let attrText = item.data.attributes ? item.data.attributes.filter(a=>a.value).map(a=>a.value).join(' / ') : '';
-        this.els.importPreviewInfo.innerHTML = `<strong>ファイル名:</strong> ${item.name}<br>` + (item.data.tableData ? `<strong>データ数:</strong> ${item.data.tableData.length}行<br>` : '') + (attrText ? `<strong>属性情報:</strong> <span style="color:#4b5563;">${attrText}</span>` : '');
+        let attrText = item.data.attributes ? item.data.attributes.filter(a=>a.value).map(a=>`${Utils.escapeHTML(a.name)}: ${Utils.escapeHTML(a.value)}`).join(' / ') : '';
+        const titleLabel = item.sourceFileName ? '箇所名' : 'ファイル名';
+        const sourceSuffix = item.sourceFileName ? ` <span style="color:#6b7280;font-size:0.8rem;">(${Utils.escapeHTML(item.sourceFileName)})</span>` : '';
+        const areaInfo = item.areaText ? ` / <strong>面積:</strong> ${Utils.escapeHTML(item.areaText)}` : '';
+        this.els.importPreviewInfo.innerHTML =
+            `<strong>${titleLabel}:</strong> ${Utils.escapeHTML(item.name)}${sourceSuffix}<br>` +
+            (item.data.tableData ? `<strong>データ数:</strong> ${item.data.tableData.length}行${areaInfo}<br>` : '') +
+            (attrText ? `<strong>属性情報:</strong> <span style="color:#4b5563;">${attrText}</span>` : '');
         this.els.btnApplyImport.disabled = false;
     },
 
@@ -1151,5 +1165,4 @@ setTimeout(() => { try {
         setTimeout(() => { this.resizeCanvas(); this.updateDrawing(true); if (this.isMapMode && this.map) { this.map.invalidateSize(); this.updateMapDrawing(true); } }, 100);
         this.pushState(); this.showToast('データを読み込みました。');
     },
-
 };

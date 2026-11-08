@@ -7,6 +7,7 @@ import { $id, bindClick, CONSTANTS, Utils } from './utils.js';
 import { drawing } from './drawing.js';
 import { mapView } from './mapView.js';
 import { exportUtils } from './exportUtils.js';
+import { parseCompassMdb } from './mdbReader.js';
 
 class CompassSurveyApp {
             constructor() {
@@ -84,7 +85,7 @@ class CompassSurveyApp {
                     exportModal: $id('exportModal'), exportModalTitle: $id('exportModalTitle'), inputExportFileName: $id('inputExportFileName'),
                     exportExtension: $id('exportExtension'), btnCancelExport: $id('btnCancelExport'), btnApplyExport: $id('btnApplyExport'),
                     htmlExportOptions: $id('htmlExportOptions'), shpExportOptions: $id('shpExportOptions'), inputCustomScale: $id('inputCustomScale'), radioCustomScale: $id('radioCustomScale'),
-                    importPreviewModal: $id('importPreviewModal'), importFileList: $id('importFileList'), importPreviewImage: $id('importPreviewImage'),
+                    importPreviewModal: $id('importPreviewModal'), importFileList: $id('importFileList'), inputImportSearch: $id('inputImportSearch'), importPreviewImage: $id('importPreviewImage'),
                     importNoPreviewText: $id('importNoPreviewText'), importPreviewInfo: $id('importPreviewInfo'), btnCancelImport: $id('btnCancelImport'),
                     btnApplyImport: $id('btnApplyImport'), confirmModal: $id('confirmModal'), confirmTitle: $id('confirmTitle'),
                     confirmMessage: $id('confirmMessage'), btnCancelConfirm: $id('btnCancelConfirm'), btnApplyConfirm: $id('btnApplyConfirm'),
@@ -210,7 +211,7 @@ class CompassSurveyApp {
                         bindClick(m.cancel, () => {
                             if (document.activeElement) document.activeElement.blur();
                             m.el.style.display = 'none';
-                            if (m.el === this.els.importPreviewModal) { this.importFilesList = []; this.els.inputFileJSON.value = ''; }
+                            if (m.el === this.els.importPreviewModal) { this.importFilesList = []; this.els.inputFileJSON.value = ''; if (this.els.inputImportSearch) this.els.inputImportSearch.value = ''; }
                             if (m.el === this.els.confirmModal) this.confirmCallback = null;
                             if (m.el === this.els.textPromptModal) this.textPromptCallback = null;
                         });
@@ -256,8 +257,13 @@ class CompassSurveyApp {
                         this.els.importPreviewModal.style.display = 'none';
                         this.applyImportData(this.importFilesList[this.selectedImportIndex].data);
                         this.importFilesList = []; this.els.inputFileJSON.value = '';
+                        if (this.els.inputImportSearch) this.els.inputImportSearch.value = '';
                     }
                 });
+
+                if (this.els.inputImportSearch) {
+                    this.els.inputImportSearch.addEventListener('input', () => this.renderImportFileList());
+                }
 
                 bindClick(this.els.btnApplyPaste, () => this.applyPasteModal());
                 bindClick(this.els.btnApplyDMS, () => this.applyDMSModal());
@@ -1591,14 +1597,14 @@ class CompassSurveyApp {
             // ------------------------------------------
             async handleDrop(e) {
                 e.preventDefault(); e.stopPropagation(); document.body.classList.remove('drag-active');
-                if (!e.dataTransfer) return; const jsonFiles = [], items = e.dataTransfer.items;
-                if (items) { const ps = []; for(let i=0; i<items.length; i++) { const it = items[i].webkitGetAsEntry(); if (it) ps.push(this.traverseFileTree(it, jsonFiles)); } await Promise.all(ps); } 
-                else if (e.dataTransfer.files) Array.from(e.dataTransfer.files).forEach(f => { if (f.name.toLowerCase().endsWith('.json')) jsonFiles.push(f); });
-                this.processJsonFiles(jsonFiles);
+                if (!e.dataTransfer) return; const targetFiles = [], items = e.dataTransfer.items;
+                if (items) { const ps = []; for(let i=0; i<items.length; i++) { const it = items[i].webkitGetAsEntry(); if (it) ps.push(this.traverseFileTree(it, targetFiles)); } await Promise.all(ps); } 
+                else if (e.dataTransfer.files) Array.from(e.dataTransfer.files).forEach(f => { if (/\.(json|mdb)$/i.test(f.name)) targetFiles.push(f); });
+                this.processJsonFiles(targetFiles);
             }
 
             async traverseFileTree(item, fileList) {
-                if (item.isFile) return new Promise(res => item.file(f => { if (f.name.toLowerCase().endsWith('.json')) fileList.push(f); res(); }));
+                if (item.isFile) return new Promise(res => item.file(f => { if (/\.(json|mdb)$/i.test(f.name)) fileList.push(f); res(); }));
                 else if (item.isDirectory) {
                     const reader = item.createReader();
                     const entries = await (async () => { let all = [], ents; do { ents = await new Promise(r => reader.readEntries(r)); all = all.concat(ents); } while (ents.length > 0); return all; })();
@@ -1606,23 +1612,54 @@ class CompassSurveyApp {
                 }
             }
 
-
-
-            async processJsonFiles(jsonFiles) {
-                if (jsonFiles.length === 0) { this.showToast('JSONファイルが見つかりませんでした。'); if (this.els.inputFileJSON) this.els.inputFileJSON.value = ''; return; }
+            async processJsonFiles(targetFiles) {
+                if (targetFiles.length === 0) { this.showToast('読み込めるファイル（.json / .mdb）が見つかりませんでした。'); if (this.els.inputFileJSON) this.els.inputFileJSON.value = ''; return; }
                 this.importFilesList = []; this.selectedImportIndex = -1; this.els.importFileList.innerHTML = '';
+                if (this.els.inputImportSearch) this.els.inputImportSearch.value = '';
                 this.els.importPreviewImage.style.display = 'none'; this.els.importNoPreviewText.style.display = 'inline-block';
                 this.els.importPreviewInfo.innerHTML = ''; this.els.btnApplyImport.disabled = true;
                 this.els.importPreviewModal.style.display = 'flex'; this.els.importNoPreviewText.textContent = '読み込み中...';
 
-                const results = await Promise.all(jsonFiles.map(file => new Promise(res => {
+                const nestedResults = await Promise.all(targetFiles.map(file => new Promise(res => {
+                    const isMdb = /\.mdb$/i.test(file.name);
                     const r = new FileReader();
-                    r.onload = e => { try { const s = JSON.parse(e.target.result); res((s && Array.isArray(s.tableData)) ? { file, name: file.name, data: s } : null); } catch(err) { res(null); } };
-                    r.onerror = () => res(null); r.readAsText(file);
+                    if (isMdb) {
+                        r.onload = e => {
+                            try {
+                                const mdbItems = parseCompassMdb(e.target.result, file.name);
+                                res(mdbItems.map(item => ({ ...item, file, isMdb: true })));
+                            } catch (err) {
+                                console.warn('MDB parse error:', err);
+                                res([]);
+                            }
+                        };
+                        r.onerror = () => res([]);
+                        r.readAsArrayBuffer(file);
+                    } else {
+                        r.onload = e => {
+                            try {
+                                const s = JSON.parse(e.target.result);
+                                res((s && Array.isArray(s.tableData)) ? [{ file, name: file.name, data: s, isMdb: false }] : []);
+                            } catch (err) {
+                                res([]);
+                            }
+                        };
+                        r.onerror = () => res([]);
+                        r.readAsText(file);
+                    }
                 })));
 
-                this.importFilesList = results.filter(i => i !== null).sort((a, b) => a.name.localeCompare(b.name));
-                if (this.importFilesList.length === 0) { this.els.importNoPreviewText.textContent = '有効なデータが見つかりませんでした。'; return; }
+                const jsonItems = [];
+                const mdbItems = [];
+                nestedResults.flat().forEach(item => {
+                    if (!item) return;
+                    if (item.isMdb) mdbItems.push(item);
+                    else jsonItems.push(item);
+                });
+                jsonItems.sort((a, b) => a.name.localeCompare(b.name));
+                this.importFilesList = [...mdbItems, ...jsonItems];
+
+                if (this.importFilesList.length === 0) { this.els.importNoPreviewText.textContent = '有効な測量データが見つかりませんでした。'; return; }
                 this.renderImportFileList(); this.selectImportFile(0);
             }
 
