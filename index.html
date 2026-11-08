@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="google" content="notranslate">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>コンパスtoGIS（ブラウザ版） v1.2.1</title>
+    <title>コンパスtoGIS（ブラウザ版） v1.2.2</title>
     <link rel="icon" type="image/svg+xml" href="./assets/favicon-DKD_Nneq.svg" />
 
     <meta name="theme-color" content="#059669" />
@@ -13,13 +13,13 @@
       name="description"
       content="コンパス測量データをGIS図面に変換するツール"
     />
-    <script type="module" crossorigin src="./assets/main-Dj2k_kA4.js"></script>
+    <script type="module" crossorigin src="./assets/main-6k76MhBF.js"></script>
     <link rel="modulepreload" crossorigin href="./assets/modulepreload-polyfill-B5Qt9EMX.js">
     <link rel="stylesheet" crossorigin href="./assets/main-BQ6ZpTEZ.css">
   <link rel="manifest" href="./manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="./registerSW.js"></script></head>
   <body>
     <div class="header">
-      <h1>🌍 コンパスtoGIS（ブラウザ版） v1.2.1</h1>
+      <h1>🌍 コンパスtoGIS（ブラウザ版） v1.2.2</h1>
     </div>
 
     <div class="container">
@@ -34,12 +34,12 @@
           </button>
           <label
             class="btn-file-load"
-            title="この画面上にファイルやフォルダをドロップすると開くことができます"
+            title="JSONファイルやMDBファイル（コンパスtoGISデータベース）、フォルダをこの画面上にドロップしても開くことができます"
           >
-            📂 読込（複数選択可）<input
+            📂 読込（JSON/MDB）<input
               type="file"
               id="inputFileJSON"
-              accept=".json"
+              accept=".json,.mdb"
               multiple
               style="display: none"
             />
@@ -1132,7 +1132,7 @@
             margin-bottom: 10px;
           "
         >
-          左のリストからファイルを選ぶと、プレビューが表示されます。
+          左のリストからデータ（JSONファイルまたはMDB内の測量箇所）を選ぶと、プレビューが表示されます。ダブルクリックで直接開きます。
         </p>
         <div
           style="
@@ -1146,15 +1146,32 @@
           <div
             style="
               flex: 1.2;
+              display: flex;
+              flex-direction: column;
               border: 1px solid var(--border-color);
               border-radius: 4px;
-              overflow-y: auto;
+              overflow: hidden;
               background: #fff;
             "
           >
+            <div style="padding: 6px; border-bottom: 1px solid #e5e7eb; background: #f9fafb">
+              <input
+                type="text"
+                id="inputImportSearch"
+                placeholder="🔍 箇所名・属性で絞り込み..."
+                style="
+                  width: 100%;
+                  padding: 5px 8px;
+                  font-size: 0.8rem;
+                  border: 1px solid #d1d5db;
+                  border-radius: 4px;
+                  box-sizing: border-box;
+                "
+              />
+            </div>
             <ul
               id="importFileList"
-              style="list-style: none; margin: 0; padding: 0"
+              style="list-style: none; margin: 0; padding: 0; flex: 1; overflow-y: auto"
             ></ul>
           </div>
           <div
@@ -1202,7 +1219,7 @@
               style="
                 font-size: 0.85rem;
                 color: #1f2937;
-                height: 60px;
+                height: 75px;
                 overflow-y: auto;
                 line-height: 1.4;
               "
@@ -1329,6 +1346,5 @@
     </div>
 
     <div id="toast" class="toast"></div>
-
   </body>
 </html>
