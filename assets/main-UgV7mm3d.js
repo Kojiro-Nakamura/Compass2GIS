@@ -4556,6 +4556,11 @@ setTimeout(() => { try {
         this.processJsonFiles(Array.from(files).filter(f => /\.(json|mdb)$/i.test(f.name)));
     },
 
+    importMDB(event) {
+        const files = event.target.files; if (!files || files.length === 0) return;
+        this.processJsonFiles(Array.from(files).filter(f => /\.mdb$/i.test(f.name)));
+    },
+
     renderImportFileList() {
         this.els.importFileList.innerHTML = '';
         const query = (this.els.inputImportSearch ? this.els.inputImportSearch.value : '').trim().toLowerCase();
@@ -4618,6 +4623,7 @@ setTimeout(() => { try {
             this.applyImportData(targetData);
             this.importFilesList = [];
             if (this.els.inputFileJSON) this.els.inputFileJSON.value = '';
+            if (this.els.inputFileMDB) this.els.inputFileMDB.value = '';
             if (this.els.inputImportSearch) this.els.inputImportSearch.value = '';
         }
     },
@@ -4702,14 +4708,54 @@ class CompassSurveyApp {
             }
 
             initDOM() {
-                if (!$id('btnSaveMDB') && $id('btnSaveJSON')) {
+                // 古いHTMLキャッシュが残っている場合でも4ボタン構成（測量データ読込・測量データ保存・MDB読込・MDB保存）に揃える
+                const btnSaveJSONEl = $id('btnSaveJSON');
+                const inputFileJSONEl = $id('inputFileJSON');
+                if (btnSaveJSONEl) {
+                    btnSaveJSONEl.textContent = '💾 測量データ保存';
+                    btnSaveJSONEl.style.padding = '0 9px';
+                }
+                if (inputFileJSONEl) {
+                    inputFileJSONEl.setAttribute('accept', '.json');
+                    const lblJSON = inputFileJSONEl.closest('label');
+                    if (lblJSON) {
+                        lblJSON.id = 'lblLoadJSON';
+                        lblJSON.style.backgroundColor = '#3e6285';
+                        lblJSON.style.padding = '0 9px';
+                        Array.from(lblJSON.childNodes).forEach(n => { if (n.nodeType === 3) n.nodeValue = ''; });
+                        lblJSON.insertBefore(document.createTextNode('📂 測量データ読込'), inputFileJSONEl);
+                        if (btnSaveJSONEl && lblJSON.compareDocumentPosition(btnSaveJSONEl) & Node.DOCUMENT_POSITION_PRECEDING) {
+                            btnSaveJSONEl.insertAdjacentElement('beforebegin', lblJSON);
+                        }
+                    }
+                }
+                if (!$id('btnSaveMDB') && btnSaveJSONEl) {
                     const btn = document.createElement('button');
                     btn.id = 'btnSaveMDB';
                     btn.style.backgroundColor = '#1e4d6b';
+                    btn.style.padding = '0 9px';
                     btn.title = 'コンパスtoGISのMDBファイル（.mdb）にデータを上書き・追加保存';
                     btn.textContent = '🗄️ MDB保存';
-                    $id('btnSaveJSON').insertAdjacentElement('afterend', btn);
+                    btnSaveJSONEl.insertAdjacentElement('afterend', btn);
                 }
+                if (!$id('inputFileMDB') && btnSaveJSONEl) {
+                    const lblMdb = document.createElement('label');
+                    lblMdb.id = 'lblLoadMDB';
+                    lblMdb.className = 'btn-file-load';
+                    lblMdb.style.backgroundColor = '#2b5b7a';
+                    lblMdb.style.padding = '0 9px';
+                    lblMdb.title = 'コンパスtoGISのMDBファイル（.mdb）を読み込む（画面上にドロップしても開けます）';
+                    lblMdb.textContent = '📂 MDB読込';
+                    const inpMdb = document.createElement('input');
+                    inpMdb.type = 'file';
+                    inpMdb.id = 'inputFileMDB';
+                    inpMdb.accept = '.mdb';
+                    inpMdb.multiple = true;
+                    inpMdb.style.display = 'none';
+                    lblMdb.appendChild(inpMdb);
+                    btnSaveJSONEl.insertAdjacentElement('afterend', lblMdb);
+                }
+
                 this.els = {
                     tbody: $id('tableBody'), canvas: $id('previewCanvas'), container: $id('canvasContainer'),
                     tooltip: $id('tooltip'), mapContainer: $id('mapContainer'), dropdown: document.createElement('ul'),
@@ -4717,7 +4763,8 @@ class CompassSurveyApp {
                     btnModeLine: $id('btnModeLine'), btnModeErase: $id('btnModeErase'), btnZoomFit: $id('btnZoomFit'),
                     btnLoadDemo: $id('btnLoadDemo'), btnClear: $id('btnClear'), btnPasteClipboard: $id('btnPasteClipboard'),
                     btnCopyClipboard: $id('btnCopyClipboard'), btnToggleMap: $id('btnToggleMap'), btnExportGeoJSON: $id('btnExportGeoJSON'), btnExportShapefile: $id('btnExportShapefile'),
-                    btnExportHTML: $id('btnExportHTML'), btnProfile: $id('btnProfile'), chkAllProfile: $id('chkAllProfile'), btnSaveJSON: $id('btnSaveJSON'), btnSaveMDB: $id('btnSaveMDB'), inputFileJSON: $id('inputFileJSON'),
+                    btnExportHTML: $id('btnExportHTML'), btnProfile: $id('btnProfile'), chkAllProfile: $id('chkAllProfile'),
+                    btnSaveJSON: $id('btnSaveJSON'), btnSaveMDB: $id('btnSaveMDB'), inputFileJSON: $id('inputFileJSON'), inputFileMDB: $id('inputFileMDB'),
                     btnUndo: $id('btnUndo'), btnRedo: $id('btnRedo'), chkCompassAdjustment: $id('chkCompassAdjustment'),
                     closureInfo: $id('closureInfo'), btnCopyClosureInfo: $id('btnCopyClosureInfo'),
                     inputLat: $id('inputLat'), inputLon: $id('inputLon'), inputDeclination: $id('inputDeclination'),
@@ -4855,6 +4902,7 @@ class CompassSurveyApp {
                 bindClick(this.els.btnCopyAttr, () => this.copyAttrToClipboard());
                 
                 if (this.els.inputFileJSON) this.els.inputFileJSON.addEventListener('change', (e) => this.importJSON(e));
+                if (this.els.inputFileMDB) this.els.inputFileMDB.addEventListener('change', (e) => this.importMDB(e));
             }
 
             _initModalEvents() {
@@ -4863,7 +4911,12 @@ class CompassSurveyApp {
                         bindClick(m.cancel, () => {
                             if (document.activeElement) document.activeElement.blur();
                             m.el.style.display = 'none';
-                            if (m.el === this.els.importPreviewModal) { this.importFilesList = []; this.els.inputFileJSON.value = ''; if (this.els.inputImportSearch) this.els.inputImportSearch.value = ''; }
+                            if (m.el === this.els.importPreviewModal) {
+                                this.importFilesList = [];
+                                if (this.els.inputFileJSON) this.els.inputFileJSON.value = '';
+                                if (this.els.inputFileMDB) this.els.inputFileMDB.value = '';
+                                if (this.els.inputImportSearch) this.els.inputImportSearch.value = '';
+                            }
                             if (m.el === this.els.confirmModal) this.confirmCallback = null;
                             if (m.el === this.els.textPromptModal) this.textPromptCallback = null;
                         });
@@ -5380,7 +5433,7 @@ class CompassSurveyApp {
                 if (this.els.shpExportOptions) this.els.shpExportOptions.style.display = 'none';
                 if (this.els.mdbExportOptions) this.els.mdbExportOptions.style.display = 'none';
                 if (type === 'json') { 
-                    this.els.exportModalTitle.textContent = 'データの保存 (JSON)'; 
+                    this.els.exportModalTitle.textContent = '測量データの保存 (JSON)'; 
                     this.els.exportExtension.textContent = '.json'; 
                     this.els.htmlExportOptions.style.display = 'none'; 
                     this.els.btnApplyExport.textContent = '保存';
@@ -6317,7 +6370,12 @@ class CompassSurveyApp {
             }
 
             async processJsonFiles(targetFiles) {
-                if (targetFiles.length === 0) { this.showToast('読み込めるファイル（.json / .mdb）が見つかりませんでした。'); if (this.els.inputFileJSON) this.els.inputFileJSON.value = ''; return; }
+                if (targetFiles.length === 0) {
+                    this.showToast('読み込めるファイル（.json / .mdb）が見つかりませんでした。');
+                    if (this.els.inputFileJSON) this.els.inputFileJSON.value = '';
+                    if (this.els.inputFileMDB) this.els.inputFileMDB.value = '';
+                    return;
+                }
                 this.importFilesList = []; this.selectedImportIndex = -1; this.els.importFileList.innerHTML = '';
                 if (this.els.inputImportSearch) this.els.inputImportSearch.value = '';
                 this.els.importPreviewImage.style.display = 'none'; this.els.importNoPreviewText.style.display = 'inline-block';
@@ -6332,10 +6390,8 @@ class CompassSurveyApp {
                             try {
                                 const mdbBuffer = new Uint8Array(e.target.result);
                                 const mdbItems = parseCompassMdb(mdbBuffer, file.name);
-                                if (!this.activeMdbBuffer) {
-                                    this.activeMdbBuffer = mdbBuffer;
-                                    this.activeMdbFileName = file.name;
-                                }
+                                this.activeMdbBuffer = mdbBuffer;
+                                this.activeMdbFileName = file.name;
                                 res(mdbItems.map(item => ({ ...item, file, isMdb: true, mdbBuffer })));
                             } catch (err) {
                                 console.warn('MDB parse error:', err);
