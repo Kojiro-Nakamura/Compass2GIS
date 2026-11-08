@@ -64,6 +64,14 @@ class CompassSurveyApp {
             }
 
             initDOM() {
+                if (!$id('btnSaveMDB') && $id('btnSaveJSON')) {
+                    const btn = document.createElement('button');
+                    btn.id = 'btnSaveMDB';
+                    btn.style.backgroundColor = '#1e4d6b';
+                    btn.title = 'コンパスtoGISのMDBファイル（.mdb）にデータを上書き・追加保存';
+                    btn.textContent = '🗄️ MDB保存';
+                    $id('btnSaveJSON').insertAdjacentElement('afterend', btn);
+                }
                 this.els = {
                     tbody: $id('tableBody'), canvas: $id('previewCanvas'), container: $id('canvasContainer'),
                     tooltip: $id('tooltip'), mapContainer: $id('mapContainer'), dropdown: document.createElement('ul'),
@@ -71,7 +79,7 @@ class CompassSurveyApp {
                     btnModeLine: $id('btnModeLine'), btnModeErase: $id('btnModeErase'), btnZoomFit: $id('btnZoomFit'),
                     btnLoadDemo: $id('btnLoadDemo'), btnClear: $id('btnClear'), btnPasteClipboard: $id('btnPasteClipboard'),
                     btnCopyClipboard: $id('btnCopyClipboard'), btnToggleMap: $id('btnToggleMap'), btnExportGeoJSON: $id('btnExportGeoJSON'), btnExportShapefile: $id('btnExportShapefile'),
-                    btnExportHTML: $id('btnExportHTML'), btnProfile: $id('btnProfile'), chkAllProfile: $id('chkAllProfile'), btnSaveJSON: $id('btnSaveJSON'), inputFileJSON: $id('inputFileJSON'),
+                    btnExportHTML: $id('btnExportHTML'), btnProfile: $id('btnProfile'), chkAllProfile: $id('chkAllProfile'), btnSaveJSON: $id('btnSaveJSON'), btnSaveMDB: $id('btnSaveMDB'), inputFileJSON: $id('inputFileJSON'),
                     btnUndo: $id('btnUndo'), btnRedo: $id('btnRedo'), chkCompassAdjustment: $id('chkCompassAdjustment'),
                     closureInfo: $id('closureInfo'), btnCopyClosureInfo: $id('btnCopyClosureInfo'),
                     inputLat: $id('inputLat'), inputLon: $id('inputLon'), inputDeclination: $id('inputDeclination'),
@@ -84,7 +92,11 @@ class CompassSurveyApp {
                     btnPasteAttr: $id('btnPasteAttr'), btnCancelAttrPaste: $id('btnCancelAttrPaste'), btnApplyAttrPaste: $id('btnApplyAttrPaste'),
                     exportModal: $id('exportModal'), exportModalTitle: $id('exportModalTitle'), inputExportFileName: $id('inputExportFileName'),
                     exportExtension: $id('exportExtension'), btnCancelExport: $id('btnCancelExport'), btnApplyExport: $id('btnApplyExport'),
-                    htmlExportOptions: $id('htmlExportOptions'), shpExportOptions: $id('shpExportOptions'), inputCustomScale: $id('inputCustomScale'), radioCustomScale: $id('radioCustomScale'),
+                    htmlExportOptions: $id('htmlExportOptions'), shpExportOptions: $id('shpExportOptions'), mdbExportOptions: $id('mdbExportOptions'),
+                    inputTargetMdbFile: $id('inputTargetMdbFile'), mdbTargetFileInfo: $id('mdbTargetFileInfo'),
+                    radioMdbOverwrite: $id('radioMdbOverwrite'), radioMdbAppend: $id('radioMdbAppend'),
+                    selMdbTargetKasho: $id('selMdbTargetKasho'), inputMdbKashoName: $id('inputMdbKashoName'), btnAutoMdbKashoName: $id('btnAutoMdbKashoName'),
+                    inputCustomScale: $id('inputCustomScale'), radioCustomScale: $id('radioCustomScale'),
                     importPreviewModal: $id('importPreviewModal'), importFileList: $id('importFileList'), inputImportSearch: $id('inputImportSearch'), importPreviewImage: $id('importPreviewImage'),
                     importNoPreviewText: $id('importNoPreviewText'), importPreviewInfo: $id('importPreviewInfo'), btnCancelImport: $id('btnCancelImport'),
                     btnApplyImport: $id('btnApplyImport'), confirmModal: $id('confirmModal'), confirmTitle: $id('confirmTitle'),
@@ -125,6 +137,7 @@ class CompassSurveyApp {
                 document.body.classList.add('mode-pan');
                 this.history = []; this.historyIndex = -1; this.isUndoing = false;
                 this.importFilesList = []; this.selectedImportIndex = -1;
+                this.activeMdbBuffer = null; this.activeMdbFileName = ''; this.activeMdbKashoId = null; this._mdbModalKashoItems = [];
                 this.isMapMode = false; this.map = null; this.mapLayerGroup = null;
             }
 
@@ -165,6 +178,7 @@ class CompassSurveyApp {
                 bindClick(this.els.btnRedo, () => this.redo());
                 
                 bindClick(this.els.btnSaveJSON, () => this.openExportModal('json'));
+                if (this.els.btnSaveMDB) bindClick(this.els.btnSaveMDB, () => this.openExportModal('mdb'));
                 bindClick(this.els.btnExportGeoJSON, () => this.openExportModal('geojson'));
                 if (this.els.btnExportShapefile) bindClick(this.els.btnExportShapefile, () => this.openExportModal('shapefile'));
                 bindClick(this.els.btnExportHTML, () => {
@@ -225,6 +239,11 @@ class CompassSurveyApp {
                         this.exportJSON(fileName);
                         this.els.exportModal.style.display = 'none';
                     }
+                    else if (this.currentExportType === 'mdb') {
+                        if (this.exportMDB(fileName) !== false) {
+                            this.els.exportModal.style.display = 'none';
+                        }
+                    }
                     else if (this.currentExportType === 'geojson') {
                         this.exportGeoJSON(fileName);
                         this.els.exportModal.style.display = 'none';
@@ -245,6 +264,52 @@ class CompassSurveyApp {
                         this.els.exportModal.style.display = 'none';
                     }
                 });
+
+                if (this.els.inputTargetMdbFile) {
+                    this.els.inputTargetMdbFile.addEventListener('change', (e) => {
+                        const f = e.target.files?.[0];
+                        if (!f) return;
+                        const r = new FileReader();
+                        r.onload = (ev) => {
+                            this.activeMdbBuffer = new Uint8Array(ev.target.result);
+                            this.activeMdbFileName = f.name;
+                            this.refreshMdbExportModalUI();
+                        };
+                        r.readAsArrayBuffer(f);
+                        e.target.value = '';
+                    });
+                }
+                if (this.els.selMdbTargetKasho) {
+                    this.els.selMdbTargetKasho.addEventListener('change', () => {
+                        if (this.els.radioMdbOverwrite) this.els.radioMdbOverwrite.checked = true;
+                        const chosen = (this._mdbModalKashoItems || []).find(i => String(i.kashoId) === String(this.els.selMdbTargetKasho.value));
+                        if (chosen && this.els.inputMdbKashoName) {
+                            this.els.inputMdbKashoName.value = chosen.name;
+                        }
+                    });
+                }
+                if (this.els.radioMdbOverwrite) {
+                    this.els.radioMdbOverwrite.addEventListener('change', () => {
+                        if (this.els.radioMdbOverwrite.checked && this.els.selMdbTargetKasho) {
+                            const chosen = (this._mdbModalKashoItems || []).find(i => String(i.kashoId) === String(this.els.selMdbTargetKasho.value));
+                            if (chosen && this.els.inputMdbKashoName) this.els.inputMdbKashoName.value = chosen.name;
+                        }
+                    });
+                }
+                if (this.els.radioMdbAppend) {
+                    this.els.radioMdbAppend.addEventListener('change', () => {
+                        if (this.els.radioMdbAppend.checked && this.els.inputMdbKashoName) {
+                            this.els.inputMdbKashoName.value = this.generateAutoKashoName();
+                        }
+                    });
+                }
+                if (this.els.btnAutoMdbKashoName) {
+                    bindClick(this.els.btnAutoMdbKashoName, () => {
+                        if (this.els.inputMdbKashoName) {
+                            this.els.inputMdbKashoName.value = this.generateAutoKashoName();
+                        }
+                    });
+                }
 
                 if (this.els.inputCustomScale) {
                     this.els.inputCustomScale.addEventListener('focus', () => this.els.radioCustomScale.checked = true);
