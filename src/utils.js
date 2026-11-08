@@ -63,5 +63,6 @@ export const Utils = {
         let t = ((p.x - p1.x) * (p2.x - p1.x) + (p.y - p1.y) * (p2.y - p1.y)) / l2;
         t = Math.max(0, Math.min(1, t));
         return Math.sqrt(Math.pow(p.x - (p1.x + t * (p2.x - p1.x)), 2) + Math.pow(p.y - (p1.y + t * (p2.y - p1.y)), 2));
-    }
+    },
+    escapeHTML: (str) => String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 };

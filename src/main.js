@@ -251,15 +251,7 @@ class CompassSurveyApp {
                     this.els.inputCustomScale.addEventListener('click', () => this.els.radioCustomScale.checked = true);
                 }
 
-                bindClick(this.els.btnApplyImport, () => {
-                    if (document.activeElement) document.activeElement.blur();
-                    if (this.selectedImportIndex >= 0 && this.importFilesList[this.selectedImportIndex]) {
-                        this.els.importPreviewModal.style.display = 'none';
-                        this.applyImportData(this.importFilesList[this.selectedImportIndex].data);
-                        this.importFilesList = []; this.els.inputFileJSON.value = '';
-                        if (this.els.inputImportSearch) this.els.inputImportSearch.value = '';
-                    }
-                });
+                bindClick(this.els.btnApplyImport, () => this.applySelectedImport());
 
                 if (this.els.inputImportSearch) {
                     this.els.inputImportSearch.addEventListener('input', () => this.renderImportFileList());
