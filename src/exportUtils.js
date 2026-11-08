@@ -1,4 +1,5 @@
 import { Utils, CONSTANTS } from "./utils.js";
+import { buildShapefileLayerFiles, buildZipArchive } from "./shapefile.js";
 
 export const exportUtils = {
     exportGeoJSON(fileName) {
@@ -31,6 +32,182 @@ export const exportUtils = {
         if (!fileName) fileName = '令和8年度_育成複層林整備_山田太郎_No.10';
         if (!fileName.endsWith('.geojson')) fileName += '.geojson';
         this._downloadFile("data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ type: "FeatureCollection", features }, null, 2)), fileName);
+    },
+
+    exportShapefile(fileName, encoding = 'SJIS') {
+        const lat0 = parseFloat(this.els.inputLat.value), lon0 = parseFloat(this.els.inputLon.value);
+        if (isNaN(lat0) || isNaN(lon0)) return this.showToast("基準点(B.P.)の緯度・経度を正しく入力してください。");
+        const lonDPM = CONSTANTS.LAT_DEG_PER_METER / Math.cos(Utils.deg2rad(lat0));
+
+        const customFieldDefs = [];
+        const customValues = {};
+        this.state.attributes.forEach((a, idx) => {
+            const name = a.name ? a.name.trim() : '';
+            if (name) {
+                const key = `attr_${idx}`;
+                customFieldDefs.push({ key, name, type: 'C' });
+                customValues[key] = a.value != null ? String(a.value) : '';
+            }
+        });
+
+        let baseName = (fileName || '令和8年度_育成複層林整備_山田太郎_No.10').replace(/\.(zip|shp)$/i, '');
+        const zipFiles = [];
+
+        // 1. ポリゴンレイヤ (_polygon)
+        if (this.els.chkCompassAdjustment.checked && this.state.detectedAreas.length > 0) {
+            const polyGeoms = [];
+            const polyRecords = [];
+            this.state.detectedAreas.forEach((p, idx) => {
+                const rings = [p.coords, ...(p.holes || []).map(h => h.coords)];
+                polyGeoms.push(rings);
+                polyRecords.push({
+                    name: p.originalName || `区画 ${idx + 1}`,
+                    area_m2: parseFloat(p.area.toFixed(2)),
+                    hole_m2: parseFloat((p.area - p.netArea).toFixed(2)),
+                    net_m2: parseFloat(p.netArea.toFixed(2)),
+                    area_ha: parseFloat(Utils.round4(p.area / 10000)),
+                    hole_ha: parseFloat(Utils.round4((p.area - p.netArea) / 10000)),
+                    net_ha: parseFloat(Utils.round4(p.netArea / 10000)),
+                    perim_m: parseFloat(p.perimeter.toFixed(2)),
+                    struct: p.isDonut ? `ドーナツポリゴン（${p.holes.length}つの穴）` : '通常ポリゴン',
+                    ...customValues
+                });
+            });
+            const polyFields = [
+                { key: 'name', name: '区画名', type: 'C' },
+                { key: 'area_m2', name: encoding === 'SJIS' ? '全体面積m2' : '全体m2', type: 'N', size: 14, decimals: 2 },
+                { key: 'hole_m2', name: encoding === 'SJIS' ? '除地面積m2' : '除地m2', type: 'N', size: 14, decimals: 2 },
+                { key: 'net_m2', name: encoding === 'SJIS' ? '正味面積m2' : '正味m2', type: 'N', size: 14, decimals: 2 },
+                { key: 'area_ha', name: encoding === 'SJIS' ? '全体面積ha' : '全体ha', type: 'N', size: 12, decimals: 4 },
+                { key: 'hole_ha', name: encoding === 'SJIS' ? '除地面積ha' : '除地ha', type: 'N', size: 12, decimals: 4 },
+                { key: 'net_ha', name: encoding === 'SJIS' ? '正味面積ha' : '正味ha', type: 'N', size: 12, decimals: 4 },
+                { key: 'perim_m', name: '周長m', type: 'N', size: 12, decimals: 2 },
+                { key: 'struct', name: '構造', type: 'C' },
+                ...customFieldDefs
+            ];
+            zipFiles.push(...buildShapefileLayerFiles(`${baseName}_polygon`, 5, polyGeoms, polyRecords, polyFields, encoding));
+        }
+
+        // 2. ラインレイヤ (_line)
+        const lineGeoms = [];
+        const lineRecords = [];
+        this.state.points.forEach(p => {
+            lineGeoms.push([
+                [
+                    [lon0 + p.fromX * lonDPM, lat0 + p.fromY * CONSTANTS.LAT_DEG_PER_METER],
+                    [lon0 + p.toX * lonDPM, lat0 + p.toY * CONSTANTS.LAT_DEG_PER_METER]
+                ]
+            ]);
+            lineRecords.push({
+                type: p.type === 'main' ? '本線' : '支線',
+                is_draw: p.isDraw ? 'はい' : 'いいえ',
+                from_pt: p.fromName || '',
+                to_pt: p.toName || '',
+                az: parseFloat(p.input.az.toFixed(2)),
+                el: parseFloat(Number(p.input.el || 0).toFixed(2)),
+                sd: parseFloat(Number(p.input.sd || 0).toFixed(2)),
+                hd: parseFloat(p.input.hd.toFixed(2)),
+                ...customValues
+            });
+        });
+        if (this.state.annotations && Array.isArray(this.state.annotations.lines)) {
+            this.state.annotations.lines.forEach(l => {
+                if (!l.points || l.points.length < 2) return;
+                lineGeoms.push([
+                    l.points.map(pt => [lon0 + pt.x * lonDPM, lat0 + pt.y * CONSTANTS.LAT_DEG_PER_METER])
+                ]);
+                lineRecords.push({
+                    type: '連続線',
+                    is_draw: 'はい',
+                    from_pt: '',
+                    to_pt: '',
+                    az: null,
+                    el: null,
+                    sd: null,
+                    hd: null,
+                    ...customValues
+                });
+            });
+        }
+        if (lineGeoms.length > 0) {
+            const lineFields = [
+                { key: 'type', name: 'タイプ', type: 'C' },
+                { key: 'is_draw', name: encoding === 'SJIS' ? '作図対象' : '作図', type: 'C' },
+                { key: 'from_pt', name: '器械点', type: 'C' },
+                { key: 'to_pt', name: '視準点', type: 'C' },
+                { key: 'az', name: '方位角', type: 'N', size: 10, decimals: 2 },
+                { key: 'el', name: '高低角', type: 'N', size: 10, decimals: 2 },
+                { key: 'sd', name: '斜距離', type: 'N', size: 12, decimals: 2 },
+                { key: 'hd', name: encoding === 'SJIS' ? '水平距離' : '水平距', type: 'N', size: 12, decimals: 2 },
+                ...customFieldDefs
+            ];
+            zipFiles.push(...buildShapefileLayerFiles(`${baseName}_line`, 3, lineGeoms, lineRecords, lineFields, encoding));
+        }
+
+        // 3. ポイントレイヤ (_point)
+        const ptGeoms = [];
+        const ptRecords = [];
+        const fp = this._getFirstPointName();
+        ptGeoms.push([lon0, lat0]);
+        ptRecords.push({
+            type: '測点',
+            pt_name: fp,
+            text: '',
+            lat: parseFloat(lat0.toFixed(6)),
+            lon: parseFloat(lon0.toFixed(6)),
+            ...customValues
+        });
+        this.state.nodes.forEach((node, name) => {
+            if (name === fp && Math.abs(node.x) < 0.001 && Math.abs(node.y) < 0.001) return;
+            const nLat = lat0 + node.y * CONSTANTS.LAT_DEG_PER_METER;
+            const nLon = lon0 + node.x * lonDPM;
+            ptGeoms.push([nLon, nLat]);
+            ptRecords.push({
+                type: '測点',
+                pt_name: name,
+                text: '',
+                lat: parseFloat(nLat.toFixed(6)),
+                lon: parseFloat(nLon.toFixed(6)),
+                ...customValues
+            });
+        });
+        if (this.state.annotations && Array.isArray(this.state.annotations.texts)) {
+            this.state.annotations.texts.forEach(t => {
+                const tLat = lat0 + t.y * CONSTANTS.LAT_DEG_PER_METER;
+                const tLon = lon0 + t.x * lonDPM;
+                ptGeoms.push([tLon, tLat]);
+                ptRecords.push({
+                    type: '注記',
+                    pt_name: '',
+                    text: t.text || '',
+                    lat: parseFloat(tLat.toFixed(6)),
+                    lon: parseFloat(tLon.toFixed(6)),
+                    ...customValues
+                });
+            });
+        }
+        if (ptGeoms.length > 0) {
+            const ptFields = [
+                { key: 'type', name: 'タイプ', type: 'C' },
+                { key: 'pt_name', name: '測点名', type: 'C' },
+                { key: 'text', name: 'テキスト', type: 'C' },
+                { key: 'lat', name: '緯度', type: 'N', size: 12, decimals: 6 },
+                { key: 'lon', name: '経度', type: 'N', size: 12, decimals: 6 },
+                ...customFieldDefs
+            ];
+            zipFiles.push(...buildShapefileLayerFiles(`${baseName}_point`, 1, ptGeoms, ptRecords, ptFields, encoding));
+        }
+
+        if (zipFiles.length === 0) {
+            return this.showToast("出力する図形データがありません。");
+        }
+
+        const zipBytes = buildZipArchive(zipFiles);
+        const blob = new Blob([zipBytes], { type: 'application/zip' });
+        const url = URL.createObjectURL(blob);
+        this._downloadFile(url, `${baseName}.zip`);
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+        this.showToast('シェープファイル(ZIP)として保存しました。');
     },
 
     showHTMLPreview(fileName, pSize = 'A4', ori = 'landscape', sOpt = 'auto', split = 50, existingWin = null) {

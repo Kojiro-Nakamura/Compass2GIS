@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="google" content="notranslate">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>コンパスtoGIS（ブラウザ版） v1.2.0</title>
+    <title>コンパスtoGIS（ブラウザ版） v1.2.1</title>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <link rel="stylesheet" href="/style.css" />
 
@@ -17,7 +17,7 @@
   </head>
   <body>
     <div class="header">
-      <h1>🌍 コンパスtoGIS（ブラウザ版） v1.2.0</h1>
+      <h1>🌍 コンパスtoGIS（ブラウザ版） v1.2.1</h1>
     </div>
 
     <div class="container">
@@ -95,14 +95,21 @@
             🌐 GeoJSON出力
           </button>
           <button
+            id="btnExportShapefile"
+            style="background-color: #3b6e52"
+            title="シェープファイル一式（ポリゴン・ライン・ポイント）をZIP形式で出力"
+          >
+            🗂️ シェープファイル出力
+          </button>
+          <button
             id="btnExportHTML"
-            style="background-color: #217270; margin-left: 8px"
+            style="background-color: #217270"
           >
             📄 平面図出力
           </button>
           <button
             id="btnProfile"
-            style="background-color: #b36a22; margin-left: 8px"
+            style="background-color: #b36a22"
           >
             📈 縦断図を作成
           </button>
@@ -1010,6 +1017,79 @@
               <option value="50" selected>50行ごと</option>
               <option value="100">100行ごと</option>
             </select>
+          </div>
+        </div>
+        <div
+          id="shpExportOptions"
+          style="
+            display: none;
+            margin-bottom: 15px;
+            background: #f9fafb;
+            padding: 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+          "
+        >
+          <div
+            style="
+              font-size: 0.85rem;
+              font-weight: bold;
+              margin-bottom: 8px;
+              color: #4b5563;
+            "
+          >
+            🔤 文字コード（属性テーブル .dbf）
+          </div>
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 6px;
+              font-size: 0.85rem;
+              margin-bottom: 10px;
+            "
+          >
+            <label
+              style="
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+              "
+            >
+              <input type="radio" name="shpEncoding" value="SJIS" checked />
+              Shift_JIS (CP932)
+              <span style="font-size: 0.75rem; color: #6b7280"
+                >（森林GIS・ArcGIS等 / 推奨）</span
+              >
+            </label>
+            <label
+              style="
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+              "
+            >
+              <input type="radio" name="shpEncoding" value="UTF-8" />
+              UTF-8
+              <span style="font-size: 0.75rem; color: #6b7280">（QGIS等）</span>
+            </label>
+          </div>
+          <div
+            style="
+              font-size: 0.75rem;
+              color: #4b5563;
+              background: #fff;
+              padding: 6px 8px;
+              border: 1px solid #e5e7eb;
+              border-radius: 3px;
+              line-height: 1.4;
+            "
+          >
+            📦 ポリゴン（<code>_polygon</code>）・ライン（<code>_line</code>）・ポイント（<code>_point</code>）の各ファイル一式（<code>.shp</code>
+            / <code>.shx</code> / <code>.dbf</code> / <code>.prj</code> /
+            <code>.cpg</code>）を1つのZIPにまとめて出力します。
           </div>
         </div>
         <div

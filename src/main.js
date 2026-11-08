@@ -69,7 +69,7 @@ class CompassSurveyApp {
                     btnModeSelect: $id('btnModeSelect'), btnModePan: $id('btnModePan'), btnModeText: $id('btnModeText'),
                     btnModeLine: $id('btnModeLine'), btnModeErase: $id('btnModeErase'), btnZoomFit: $id('btnZoomFit'),
                     btnLoadDemo: $id('btnLoadDemo'), btnClear: $id('btnClear'), btnPasteClipboard: $id('btnPasteClipboard'),
-                    btnCopyClipboard: $id('btnCopyClipboard'), btnToggleMap: $id('btnToggleMap'), btnExportGeoJSON: $id('btnExportGeoJSON'),
+                    btnCopyClipboard: $id('btnCopyClipboard'), btnToggleMap: $id('btnToggleMap'), btnExportGeoJSON: $id('btnExportGeoJSON'), btnExportShapefile: $id('btnExportShapefile'),
                     btnExportHTML: $id('btnExportHTML'), btnProfile: $id('btnProfile'), chkAllProfile: $id('chkAllProfile'), btnSaveJSON: $id('btnSaveJSON'), inputFileJSON: $id('inputFileJSON'),
                     btnUndo: $id('btnUndo'), btnRedo: $id('btnRedo'), chkCompassAdjustment: $id('chkCompassAdjustment'),
                     closureInfo: $id('closureInfo'), btnCopyClosureInfo: $id('btnCopyClosureInfo'),
@@ -83,7 +83,7 @@ class CompassSurveyApp {
                     btnPasteAttr: $id('btnPasteAttr'), btnCancelAttrPaste: $id('btnCancelAttrPaste'), btnApplyAttrPaste: $id('btnApplyAttrPaste'),
                     exportModal: $id('exportModal'), exportModalTitle: $id('exportModalTitle'), inputExportFileName: $id('inputExportFileName'),
                     exportExtension: $id('exportExtension'), btnCancelExport: $id('btnCancelExport'), btnApplyExport: $id('btnApplyExport'),
-                    htmlExportOptions: $id('htmlExportOptions'), inputCustomScale: $id('inputCustomScale'), radioCustomScale: $id('radioCustomScale'),
+                    htmlExportOptions: $id('htmlExportOptions'), shpExportOptions: $id('shpExportOptions'), inputCustomScale: $id('inputCustomScale'), radioCustomScale: $id('radioCustomScale'),
                     importPreviewModal: $id('importPreviewModal'), importFileList: $id('importFileList'), importPreviewImage: $id('importPreviewImage'),
                     importNoPreviewText: $id('importNoPreviewText'), importPreviewInfo: $id('importPreviewInfo'), btnCancelImport: $id('btnCancelImport'),
                     btnApplyImport: $id('btnApplyImport'), confirmModal: $id('confirmModal'), confirmTitle: $id('confirmTitle'),
@@ -165,6 +165,7 @@ class CompassSurveyApp {
                 
                 bindClick(this.els.btnSaveJSON, () => this.openExportModal('json'));
                 bindClick(this.els.btnExportGeoJSON, () => this.openExportModal('geojson'));
+                if (this.els.btnExportShapefile) bindClick(this.els.btnExportShapefile, () => this.openExportModal('shapefile'));
                 bindClick(this.els.btnExportHTML, () => {
                     const attrValues = this.state.attributes.map(a => a.value ? a.value.trim() : '').filter(v => v !== '');
                     const fileName = attrValues.length > 0 ? attrValues.join('_') : '令和8年度_育成複層林整備_山田太郎_No.10';
@@ -225,6 +226,12 @@ class CompassSurveyApp {
                     }
                     else if (this.currentExportType === 'geojson') {
                         this.exportGeoJSON(fileName);
+                        this.els.exportModal.style.display = 'none';
+                    }
+                    else if (this.currentExportType === 'shapefile') {
+                        const encEl = document.querySelector('input[name="shpEncoding"]:checked');
+                        const encoding = encEl ? encEl.value : 'SJIS';
+                        this.exportShapefile(fileName, encoding);
                         this.els.exportModal.style.display = 'none';
                     }
                     else if (this.currentExportType === 'html') {
@@ -669,6 +676,7 @@ class CompassSurveyApp {
                 const attrValues = this.state.attributes.map(a => a.value ? a.value.trim() : '').filter(v => v !== '');
                 this.els.inputExportFileName.value = attrValues.length > 0 ? attrValues.join('_') : '令和8年度_育成複層林整備_山田太郎_No.10';
                 
+                if (this.els.shpExportOptions) this.els.shpExportOptions.style.display = 'none';
                 if (type === 'json') { 
                     this.els.exportModalTitle.textContent = 'データの保存 (JSON)'; 
                     this.els.exportExtension.textContent = '.json'; 
@@ -679,6 +687,13 @@ class CompassSurveyApp {
                     this.els.exportModalTitle.textContent = 'GeoJSON出力'; 
                     this.els.exportExtension.textContent = '.geojson'; 
                     this.els.htmlExportOptions.style.display = 'none'; 
+                    this.els.btnApplyExport.textContent = '保存';
+                }
+                else if (type === 'shapefile') {
+                    this.els.exportModalTitle.textContent = 'シェープファイル出力 (ZIP)';
+                    this.els.exportExtension.textContent = '.zip';
+                    this.els.htmlExportOptions.style.display = 'none';
+                    if (this.els.shpExportOptions) this.els.shpExportOptions.style.display = 'block';
                     this.els.btnApplyExport.textContent = '保存';
                 }
                 else if (type === 'html') { 
